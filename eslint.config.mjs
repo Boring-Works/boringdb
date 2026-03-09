@@ -20,7 +20,13 @@ const compat = new FlatCompat({
 
 export default [
     {
-        ignores: ['**/dist', '**/.eslintrc.cjs', '**/tailwind.config.js'],
+        ignores: [
+            '**/dist',
+            '**/.eslintrc.cjs',
+            '**/tailwind.config.js',
+            'worker.ts',
+            '**/.wrangler',
+        ],
         // files: ['**/*.ts', '**/*.tsx'],
     },
     ...fixupConfigRules(

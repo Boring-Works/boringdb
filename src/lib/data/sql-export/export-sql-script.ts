@@ -780,12 +780,12 @@ export const exportSQL = async (
         LLM_MODEL_NAME ??
         'gpt-4o-mini-2024-07-18';
 
-    let config: { apiKey: string; baseUrl?: string };
+    let config: { apiKey: string; baseURL?: string };
 
     if (useCustomEndpoint) {
         config = {
             apiKey: apiKey,
-            baseUrl: baseUrl,
+            baseURL: baseUrl,
         };
     } else {
         config = {

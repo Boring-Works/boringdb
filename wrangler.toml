@@ -1,0 +1,18 @@
+name = "chartdb"
+compatibility_date = "2026-03-08"
+compatibility_flags = ["nodejs_compat"]
+main = "./worker.ts"
+workers_dev = false
+
+routes = [
+  { pattern = "db.getboring.io/*", zone_name = "getboring.io" }
+]
+
+[ai]
+binding = "AI"
+
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+binding = "ASSETS"
+run_worker_first = ["/api/v1/*"]
