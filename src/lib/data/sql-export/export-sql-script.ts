@@ -800,7 +800,7 @@ export const exportSQL = async (
     try {
         if (options?.stream) {
             const { textStream, text: textPromise } = await streamText({
-                model: openai(modelName),
+                model: openai.chat(modelName),
                 prompt: prompt,
             });
 
@@ -818,7 +818,7 @@ export const exportSQL = async (
         }
 
         const { text } = await generateText({
-            model: openai(modelName),
+            model: openai.chat(modelName),
             prompt: prompt,
         });
 
