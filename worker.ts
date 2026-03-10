@@ -26,19 +26,20 @@ const ALLOWED_ORIGINS = [
 ];
 
 /**
- * Filter a Workers AI SSE stream to ensure strict OpenAI compatibility.
- * Workers AI streams include non-standard events (e.g. {"response":"","usage":{...}})
- * that lack the required 'choices' array and would fail AI SDK Zod validation.
- * This transform passes through only valid OpenAI chunks and [DONE].
+ * Normalize a Workers AI SSE stream into strict OpenAI format.
+ * Workers AI has two streaming formats depending on the model:
+ *   - OpenAI-compat models (@cf/openai/*): {"choices":[{"delta":{"content":"..."}}]}
+ *   - Legacy models (@cf/qwen/*, etc): {"response":"..."} or {"response":"","usage":{...}}
+ * The AI SDK requires the OpenAI format with a 'choices' array.
+ * This transform converts legacy events and drops usage-only events.
  */
-function filterOpenAIStream(aiStream) {
+function normalizeAIStream(aiStream: ReadableStream | Response) {
     const reader =
         aiStream instanceof ReadableStream
             ? aiStream.getReader()
             : aiStream?.body?.getReader();
 
     if (!reader) {
-        // Fallback for unexpected stream types
         return new ReadableStream({
             start(controller) {
                 controller.enqueue(
@@ -50,6 +51,7 @@ function filterOpenAIStream(aiStream) {
     }
 
     let buffer = '';
+    let chunkIndex = 0;
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
@@ -63,7 +65,6 @@ function filterOpenAIStream(aiStream) {
 
             buffer += decoder.decode(value, { stream: true });
 
-            // Process complete lines
             const lines = buffer.split('\n');
             buffer = lines.pop() || '';
 
@@ -71,23 +72,47 @@ function filterOpenAIStream(aiStream) {
                 const trimmed = line.trim();
                 if (!trimmed || trimmed.startsWith(':')) continue;
 
-                // Pass through [DONE] as-is
                 if (trimmed === 'data: [DONE]') {
                     controller.enqueue(encoder.encode('data: [DONE]\n\n'));
                     continue;
                 }
 
-                // Only pass through SSE data events that are valid OpenAI chunks
                 if (trimmed.startsWith('data: ')) {
                     try {
                         const parsed = JSON.parse(trimmed.slice(6));
-                        // Valid OpenAI chunk must have 'choices' array
+
+                        // Already OpenAI format — pass through
                         if (parsed.choices && Array.isArray(parsed.choices)) {
                             controller.enqueue(
                                 encoder.encode(trimmed + '\n\n'),
                             );
+                            continue;
                         }
-                        // Drop non-OpenAI events like {"response":"","usage":{}}
+
+                        // Legacy Workers AI format — convert to OpenAI
+                        if ('response' in parsed && parsed.response !== '') {
+                            const openaiChunk = {
+                                id: `chatcmpl-stream-${chunkIndex++}`,
+                                object: 'chat.completion.chunk',
+                                choices: [
+                                    {
+                                        index: 0,
+                                        delta: {
+                                            content: parsed.response,
+                                        },
+                                        finish_reason: null,
+                                    },
+                                ],
+                            };
+                            controller.enqueue(
+                                encoder.encode(
+                                    `data: ${JSON.stringify(openaiChunk)}\n\n`,
+                                ),
+                            );
+                            continue;
+                        }
+
+                        // Drop empty response / usage-only events
                     } catch {
                         // Drop unparseable events
                     }
@@ -171,8 +196,8 @@ export default {
                         stream: true,
                     });
 
-                    // Filter stream to ensure strict OpenAI compatibility
-                    const cleanStream = filterOpenAIStream(aiStream);
+                    // Normalize stream: convert legacy Workers AI format to OpenAI format
+                    const cleanStream = normalizeAIStream(aiStream);
 
                     return new Response(cleanStream, {
                         headers: {
