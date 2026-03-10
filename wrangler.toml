@@ -8,6 +8,10 @@ routes = [
   { pattern = "db.getboring.io/*", zone_name = "getboring.io" }
 ]
 
+[vars]
+AI_MODEL = "gpt-oss-120b"
+AI_DIAGRAM_MODEL = "qwen2.5-coder-32b-instruct"
+
 [ai]
 binding = "AI"
 

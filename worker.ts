@@ -1,4 +1,23 @@
-const WORKERS_AI_MODEL = '@cf/openai/gpt-oss-120b';
+interface Env {
+    AI: Ai;
+    ASSETS: Fetcher;
+    AI_MODEL: string;
+    AI_DIAGRAM_MODEL: string;
+}
+
+// Map client model names to Workers AI model paths
+const MODEL_MAP: Record<string, string> = {
+    'gpt-oss-120b': '@cf/openai/gpt-oss-120b',
+    'qwen2.5-coder-32b-instruct': '@cf/qwen/qwen2.5-coder-32b-instruct',
+};
+
+function resolveModel(requestedModel: string | undefined, env: Env): string {
+    if (requestedModel && MODEL_MAP[requestedModel]) {
+        return MODEL_MAP[requestedModel];
+    }
+    // Default to the general-purpose model
+    return `@cf/openai/${env.AI_MODEL}`;
+}
 
 const ALLOWED_ORIGINS = [
     'https://db.getboring.io',
@@ -82,7 +101,7 @@ function filterOpenAIStream(aiStream) {
 }
 
 export default {
-    async fetch(request, env) {
+    async fetch(request: Request, env: Env) {
         const url = new URL(request.url);
 
         // Only handle /api/v1/* requests — everything else goes to static assets
@@ -144,8 +163,10 @@ export default {
                     temperature: body.temperature ?? 0.3,
                 };
 
+                const resolvedModel = resolveModel(body.model, env);
+
                 if (body.stream) {
-                    const aiStream = await env.AI.run(WORKERS_AI_MODEL, {
+                    const aiStream = await env.AI.run(resolvedModel, {
                         ...aiOptions,
                         stream: true,
                     });
@@ -163,7 +184,7 @@ export default {
                     });
                 }
 
-                const result = await env.AI.run(WORKERS_AI_MODEL, aiOptions);
+                const result = await env.AI.run(resolvedModel, aiOptions);
 
                 // Handle different response shapes from Workers AI:
                 // OpenAI-compat format: { choices: [{ message: { content } }] }
@@ -178,7 +199,7 @@ export default {
                         id: `chatcmpl-${crypto.randomUUID()}`,
                         object: 'chat.completion',
                         created: Math.floor(Date.now() / 1000),
-                        model: WORKERS_AI_MODEL,
+                        model: resolvedModel,
                         choices: [
                             {
                                 index: 0,

@@ -12,9 +12,11 @@ import { DatabaseType } from '@/lib/domain/database-type';
 import { useTranslation } from 'react-i18next';
 import { SelectDatabaseContent } from './select-database-content';
 import { useDialog } from '@/hooks/use-dialog';
+import { Sparkles } from 'lucide-react';
 
 export interface SelectDatabaseProps {
     onContinue: () => void;
+    onAiGenerate: () => void;
     databaseType: DatabaseType;
     setDatabaseType: React.Dispatch<React.SetStateAction<DatabaseType>>;
     hasExistingDiagram: boolean;
@@ -23,6 +25,7 @@ export interface SelectDatabaseProps {
 
 export const SelectDatabase: React.FC<SelectDatabaseProps> = ({
     onContinue,
+    onAiGenerate,
     databaseType,
     setDatabaseType,
     hasExistingDiagram,
@@ -65,6 +68,16 @@ export const SelectDatabase: React.FC<SelectDatabaseProps> = ({
                     </Button>
                 )}
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:space-x-2">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-pink-600 hover:bg-pink-50 hover:text-pink-700 dark:hover:bg-pink-950"
+                        onClick={onAiGenerate}
+                        disabled={databaseType === DatabaseType.GENERIC}
+                    >
+                        <Sparkles className="mr-2 size-4" />
+                        Generate with AI
+                    </Button>
                     <Button
                         type="button"
                         variant="outline"

@@ -16,6 +16,7 @@ import { SelectDatabase } from './select-database/select-database';
 import { CreateDiagramDialogStep } from './create-diagram-dialog-step';
 import { ImportDatabase } from '../common/import-database/import-database';
 import { SelectTables } from '../common/select-tables/select-tables';
+import { AIGenerateStep } from './ai-generate-step';
 import { useTranslation } from 'react-i18next';
 import type { BaseDialogProps } from '../common/base-dialog-props';
 import { sqlImportToDiagram } from '@/lib/data/sql-import';
@@ -77,6 +78,34 @@ export const CreateDiagramDialog: React.FC<CreateDiagramDialogProps> = ({
     }, [dialog.open]);
 
     const hasExistingDiagram = (diagramId ?? '').trim().length !== 0;
+
+    const importAiDiagram = useCallback(
+        async (dbml: string) => {
+            const diagram = await importDBMLToDiagram(dbml, {
+                databaseType,
+            });
+
+            if (diagram.name === defaultDBMLDiagramName) {
+                diagram.name = `Diagram ${diagramNumber}`;
+            }
+
+            await addDiagram({ diagram });
+            await updateConfig({
+                config: { defaultDiagramId: diagram.id },
+            });
+
+            closeCreateDiagramDialog();
+            navigate(`/diagrams/${diagram.id}`);
+        },
+        [
+            databaseType,
+            diagramNumber,
+            addDiagram,
+            updateConfig,
+            closeCreateDiagramDialog,
+            navigate,
+        ]
+    );
 
     const importNewDiagram = useCallback(
         async ({
@@ -249,6 +278,9 @@ export const CreateDiagramDialog: React.FC<CreateDiagramDialogProps> = ({
                         onContinue={() =>
                             setStep(CreateDiagramDialogStep.IMPORT_DATABASE)
                         }
+                        onAiGenerate={() =>
+                            setStep(CreateDiagramDialogStep.AI_GENERATE)
+                        }
                     />
                 ) : step === CreateDiagramDialogStep.IMPORT_DATABASE ? (
                     <ImportDatabase
@@ -266,6 +298,14 @@ export const CreateDiagramDialog: React.FC<CreateDiagramDialogProps> = ({
                         importMethod={importMethod}
                         setImportMethod={setImportMethod}
                         keepDialogAfterImport={true}
+                    />
+                ) : step === CreateDiagramDialogStep.AI_GENERATE ? (
+                    <AIGenerateStep
+                        databaseType={databaseType}
+                        onBack={() =>
+                            setStep(CreateDiagramDialogStep.SELECT_DATABASE)
+                        }
+                        onImport={importAiDiagram}
                     />
                 ) : step === CreateDiagramDialogStep.SELECT_TABLES ? (
                     <SelectTables
