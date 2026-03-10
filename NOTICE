@@ -1,0 +1,39 @@
+BoringDB — Database Schema Designer
+https://db.getboring.io
+
+Copyright (C) 2026 Cody Boring / Boring Works
+Copyright (C) 2024 ChartDB Contributors (https://github.com/chartdb/chartdb)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+MODIFICATIONS FROM UPSTREAM (chartdb/chartdb):
+
+This is a modified version of ChartDB, originally created by the ChartDB
+contributors and licensed under AGPL-3.0.
+
+Summary of modifications (2026):
+- Rebranded from ChartDB to BoringDB
+- Added AI-powered schema generation via Cloudflare Workers AI
+- Added SQL auto-detection fallback (detects SQL output and routes through
+  the existing SQL import pipeline instead of requiring DBML)
+- Added robust DBML syntax fixer (fixDBMLSyntax) for LLM output normalization
+- Added Cloudflare Workers deployment with AI proxy and stream normalization
+- Removed third-party analytics (Fathom)
+- Removed external social links and GitHub star prompts
+- SVG logo and branding replacement
+
+Source code: https://github.com/Boring-Works/boringdb
+Upstream: https://github.com/chartdb/chartdb

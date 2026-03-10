@@ -1,75 +1,61 @@
 # BoringDB
 
-Database schema designer. Visualize, design, and export your database diagrams. Live at **[db.getboring.io](https://db.getboring.io)**.
+Database schema designer. Visualize, design, and export your database diagrams.
 
-Built on [ChartDB](https://github.com/chartdb/chartdb) (AGPL-3.0), deployed on Cloudflare Workers.
+**[db.getboring.io](https://db.getboring.io)**
 
-## Features
+---
 
-- **Visual ERD Editor** — Drag-and-drop database diagram designer with real-time relationship visualization
-- **Schema Generation** — Describe your database in plain English, get a visual ERD streamed in real-time
-- **Smart Format Detection** — Automatically detects whether generated output is DBML or SQL and routes through the correct import pipeline
-- **Multi-Dialect Support** — PostgreSQL, MySQL, SQLite, SQL Server, MariaDB, Oracle
-- **SQL Export** — Export your diagrams to DDL scripts for any supported database
-- **DBML Import/Export** — Full DBML v2 support with 15+ syntax normalizations for reliable parsing
-- **Zero Backend** — All diagram data stored in browser IndexedDB. No accounts, no cloud dependency
-- **Cloudflare Workers** — Single Worker handles static assets + API proxy to Workers AI
+## What It Does
 
-## Architecture
+Describe a database in plain English. Get a visual ERD. Export DDL for any dialect.
 
-```
-Browser (Vite SPA)
-  |-- Static assets --> Cloudflare Workers Assets (./dist)
-  |-- /api/v1/*     --> Worker (worker.ts)
-                         |-- normalizeAIStream() converts SSE formats
-                         |-- MODEL_MAP routes to Workers AI models
-```
+- **Visual ERD Editor** — Drag-and-drop tables, draw relationships, design schemas visually
+- **Schema Generation** — Describe what you need, get a working diagram streamed in real-time
+- **Smart Import** — Paste DBML or SQL and it auto-detects the format. Supports PostgreSQL, MySQL, SQLite, SQL Server, MariaDB, Oracle
+- **SQL Export** — Generate DDL scripts for any supported database from your diagram
+- **Zero Backend** — Everything runs in your browser. No accounts. No data leaves your machine
+- **Cloudflare Workers** — Static assets + Workers AI on a single edge deployment
 
-### Schema Generation Flow
-
-```
-User prompt --> streamText() via AI SDK --> Worker --> Workers AI
-     |                                                    |
-     |              <-- SSE stream (normalized) <---------|
-     v
-Monaco editor (live preview with auto-scroll)
-     |
-     v (user clicks "Create Diagram")
-stripCodeFences() --> detectImportMethod()
-     |                      |
-     |--- DBML detected --> fixDBMLSyntax() --> @dbml/core Parser --> importDBMLToDiagram()
-     |                                                                        |
-     |--- SQL detected ---> sqlImportToDiagram() (auto-detects dialect)       |
-                                    \                                         |
-                                     --> stored in IndexedDB <---------------/
-```
-
-## Setup
-
-### Prerequisites
-
-- Node.js 18+
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/)
-- Cloudflare account with Workers AI enabled
-
-### Local Development
+## Quick Start
 
 ```bash
+git clone https://github.com/Boring-Works/boringdb.git
+cd boringdb
 npm install
-npm run dev        # Vite dev server at localhost:5173
-wrangler dev       # Worker for AI features
+npm run dev
 ```
 
-### Build & Deploy
+For schema generation features, run the Worker locally:
+
+```bash
+wrangler dev
+```
+
+### Deploy
 
 ```bash
 npm run build
 wrangler deploy
 ```
 
-### Configuration
+## How It Works
 
-Runtime config in `public/config.js`:
+```
+You describe a database
+        ↓
+Workers AI generates schema (DBML or SQL)
+        ↓
+Auto-detected → routed to correct parser
+        ↓
+Visual ERD in your browser (IndexedDB)
+        ↓
+Export as SQL for PostgreSQL, MySQL, SQLite, etc.
+```
+
+## Configuration
+
+`public/config.js` — runtime config loaded before the app:
 
 ```javascript
 window.env = {
@@ -81,31 +67,21 @@ window.env = {
 };
 ```
 
-## Key Files
+## Stack
 
-| File | Purpose |
-|------|---------|
-| `worker.ts` | Cloudflare Worker — CORS, AI proxy, stream normalization, cache headers |
-| `wrangler.toml` | Deployment config — routes, AI binding, model vars |
-| `src/lib/data/ai-diagram/generate-diagram-from-prompt.ts` | Schema generation — system prompt, `fixDBMLSyntax()`, streaming |
-| `src/dialogs/create-diagram-dialog/ai-generate-step.tsx` | Generate UI — prompt input, preview, format detection, import routing |
-| `src/lib/data/sql-import/index.ts` | SQL DDL import — auto-detects dialect |
-| `src/lib/import-method/detect-import-method.ts` | Format detection — DBML vs SQL vs JSON |
-
-## Branding
-
-BoringDB is a rebranded fork. The teal 4-node grid icon represents database relationships — clean, minimal, no frills.
-
-**Brand color:** Teal-600 (`#0d9488`)
-
-Logo files:
-- `src/assets/logo-light.svg` — light backgrounds
-- `src/assets/logo-dark.svg` — dark backgrounds
-- `src/assets/icon.svg` — standalone icon mark
-- `public/favicon.svg` — browser favicon
+- **Frontend:** React + Vite + TypeScript + Tailwind CSS + Monaco Editor
+- **Hosting:** Cloudflare Workers + Workers AI
+- **Storage:** Browser IndexedDB (Dexie.js) — no server database
+- **Parsing:** @dbml/core (DBML v2) + custom SQL dialect importers
 
 ## License
 
-AGPL-3.0 — same as upstream [chartdb/chartdb](https://github.com/chartdb/chartdb).
+**AGPL-3.0** — see [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
 
-Source code: [github.com/getboring/chartdb](https://github.com/getboring/chartdb)
+This is a modified version of [ChartDB](https://github.com/chartdb/chartdb), originally created by the ChartDB contributors. All modifications are documented in the [NOTICE](NOTICE) file.
+
+Under AGPL-3.0, you're free to use, modify, and distribute this software. If you deploy a modified version as a network service, you must make the source code available to users.
+
+---
+
+Built by [Boring Works](https://getboring.io) in Johnson City, TN.

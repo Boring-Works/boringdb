@@ -10,7 +10,14 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/sidebar/sidebar';
-import { Group, FileType, Plus, FolderOpen, CodeXml } from 'lucide-react';
+import {
+    Group,
+    FileType,
+    Plus,
+    FolderOpen,
+    CodeXml,
+    Code2,
+} from 'lucide-react';
 import { Table, Workflow } from 'lucide-react';
 import { useLayout } from '@/hooks/use-layout';
 import { useTranslation } from 'react-i18next';
@@ -131,7 +138,21 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = () => {
         ]
     );
 
-    const footerItems: SidebarItem[] = useMemo(() => [], []);
+    const footerItems: SidebarItem[] = useMemo(
+        () => [
+            {
+                title: 'Source',
+                icon: Code2,
+                onClick: () =>
+                    window.open(
+                        'https://github.com/Boring-Works/boringdb',
+                        '_blank'
+                    ),
+                active: false,
+            },
+        ],
+        []
+    );
 
     return (
         <Sidebar
