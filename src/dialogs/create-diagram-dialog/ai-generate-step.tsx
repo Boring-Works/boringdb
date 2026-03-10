@@ -3,7 +3,10 @@ import { Button } from '@/components/button/button';
 import { CodeSnippet } from '@/components/code-snippet/code-snippet';
 import { Spinner } from '@/components/spinner/spinner';
 import type { DatabaseType } from '@/lib/domain/database-type';
-import { generateDiagramFromPrompt } from '@/lib/data/ai-diagram/generate-diagram-from-prompt';
+import {
+    generateDiagramFromPrompt,
+    fixDBMLSyntax,
+} from '@/lib/data/ai-diagram/generate-diagram-from-prompt';
 import { Sparkles, ArrowLeft, Play, Eraser, Check } from 'lucide-react';
 import {
     DialogDescription,
@@ -161,7 +164,9 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                 </Button>
                 <Button
                     disabled={!isComplete || !dbml.trim()}
-                    onClick={() => onImport(stripCodeFences(dbml))}
+                    onClick={() =>
+                        onImport(fixDBMLSyntax(stripCodeFences(dbml)))
+                    }
                 >
                     <Check className="mr-2 size-4" />
                     Create Diagram
