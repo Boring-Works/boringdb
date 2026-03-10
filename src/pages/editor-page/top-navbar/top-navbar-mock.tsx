@@ -1,7 +1,7 @@
 import React from 'react';
 
-import ChartDBLogo from '@/assets/logo-light.png';
-import ChartDBDarkLogo from '@/assets/logo-dark.png';
+import BoringDBLogo from '@/assets/logo-light.svg';
+import BoringDBDarkLogo from '@/assets/logo-dark.svg';
 import { useTheme } from '@/hooks/use-theme';
 
 export const TopNavbarMock: React.FC = () => {
@@ -11,18 +11,18 @@ export const TopNavbarMock: React.FC = () => {
             <div className="flex flex-1 flex-col justify-between gap-x-1 md:flex-row md:justify-normal">
                 <div className="flex items-center justify-between pt-[8px] font-primary md:py-[10px]">
                     <a
-                        href="https://chartdb.io"
+                        href="https://db.getboring.io"
                         className="cursor-pointer"
                         rel="noreferrer"
                     >
                         <img
                             src={
                                 effectiveTheme === 'light'
-                                    ? ChartDBLogo
-                                    : ChartDBDarkLogo
+                                    ? BoringDBLogo
+                                    : BoringDBDarkLogo
                             }
-                            alt="chartDB"
-                            className="h-4 max-w-fit"
+                            alt="BoringDB"
+                            className="h-5 max-w-fit"
                         />
                     </a>
                 </div>

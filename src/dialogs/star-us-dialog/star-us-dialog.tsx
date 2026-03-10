@@ -29,7 +29,7 @@ export const StarUsDialog: React.FC<StarUsDialogProps> = ({ dialog }) => {
 
     const handleConfirm = useCallback(() => {
         setGithubRepoOpened(true);
-        window.open('https://github.com/chartdb/chartdb', '_blank');
+        window.open('https://github.com/getboring/chartdb', '_blank');
     }, [setGithubRepoOpened]);
 
     return (

@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
-import ChartDBLogo from '@/assets/logo-light.png';
-import ChartDBDarkLogo from '@/assets/logo-dark.png';
+import BoringDBLogo from '@/assets/logo-light.svg';
+import BoringDBDarkLogo from '@/assets/logo-dark.svg';
 import type { Example } from './examples-data/examples-data';
 import { examples } from './examples-data/examples-data';
 import { ExampleCard } from './example-card';
@@ -51,24 +51,24 @@ const ExamplesPageComponent: React.FC = () => {
     return (
         <>
             <Helmet>
-                <title>ChartDB - Example Database Diagrams & Schemas</title>
+                <title>BoringDB - Example Database Diagrams & Schemas</title>
             </Helmet>
             <section className="flex w-screen flex-col bg-background">
                 <nav className="flex h-12 flex-row items-center justify-between border-b px-4">
                     <div className="flex flex-1 justify-start gap-x-3">
                         <div className="flex items-center font-primary">
                             <a
-                                href="https://chartdb.io"
+                                href="https://db.getboring.io"
                                 className="cursor-pointer"
                                 rel="noreferrer"
                             >
                                 <img
                                     src={
                                         effectiveTheme === 'light'
-                                            ? ChartDBLogo
-                                            : ChartDBDarkLogo
+                                            ? BoringDBLogo
+                                            : BoringDBDarkLogo
                                     }
-                                    alt="chartDB"
+                                    alt="BoringDB"
                                     className="h-4 max-w-fit"
                                 />
                             </a>
@@ -83,7 +83,7 @@ const ExamplesPageComponent: React.FC = () => {
                     </h1>
                     <h2 className="mt-1 font-primary text-base text-muted-foreground">
                         A collection of examples to help you get started with
-                        ChartDB.
+                        BoringDB.
                     </h2>
                     <h2 className="mt-1 text-base font-semibold">
                         Click on one 😀

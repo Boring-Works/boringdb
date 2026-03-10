@@ -101,11 +101,11 @@ export const Menu: React.FC<MenuProps> = () => {
     }, [openExportImageDialog]);
 
     const openChartDBDocs = useCallback(() => {
-        window.open('https://docs.chartdb.io', '_blank');
+        window.open('https://github.com/getboring/chartdb', '_blank');
     }, []);
 
     const openJoinDiscord = useCallback(() => {
-        window.open('https://discord.gg/QeFwyWSKwC', '_blank');
+        window.open('https://github.com/getboring/chartdb', '_blank');
     }, []);
 
     const exportSQL = useCallback(

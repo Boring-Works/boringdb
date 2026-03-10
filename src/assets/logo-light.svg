@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 36">
+  <!-- Icon: 4-node relationship grid -->
+  <rect width="36" height="36" rx="8" fill="#0d9488"/>
+  <line x1="12" y1="12" x2="24" y2="12" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="12" y1="24" x2="24" y2="24" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="12" y1="12" x2="12" y2="24" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="24" y1="12" x2="24" y2="24" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <circle cx="12" cy="12" r="2.5" fill="#fff"/>
+  <circle cx="24" cy="12" r="2.5" fill="#fff"/>
+  <circle cx="12" cy="24" r="2.5" fill="#fff"/>
+  <circle cx="24" cy="24" r="2.5" fill="#fff"/>
+  <!-- Wordmark -->
+  <text x="44" y="25" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="20" font-weight="500" fill="#18181b" letter-spacing="-0.3">Boring<tspan font-weight="700">DB</tspan></text>
+</svg>

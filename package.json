@@ -1,5 +1,5 @@
 {
-    "name": "chartdb",
+    "name": "boringdb",
     "private": true,
     "version": "1.20.0",
     "type": "module",

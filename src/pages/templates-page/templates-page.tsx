@@ -1,6 +1,6 @@
 import React from 'react';
-import ChartDBLogo from '@/assets/logo-light.png';
-import ChartDBDarkLogo from '@/assets/logo-dark.png';
+import BoringDBLogo from '@/assets/logo-light.svg';
+import BoringDBDarkLogo from '@/assets/logo-dark.svg';
 import { useTheme } from '@/hooks/use-theme';
 import { LocalConfigProvider } from '@/context/local-config-context/local-config-provider';
 import { ThemeProvider } from '@/context/theme-context/theme-provider';
@@ -42,30 +42,23 @@ const TemplatesPageComponent: React.FC = () => {
                     <div className="flex flex-1 justify-start gap-x-3">
                         <div className="flex items-center font-primary">
                             <a
-                                href="https://chartdb.io"
+                                href="https://db.getboring.io"
                                 className="cursor-pointer"
                                 rel="noreferrer"
                             >
                                 <img
                                     src={
                                         effectiveTheme === 'light'
-                                            ? ChartDBLogo
-                                            : ChartDBDarkLogo
+                                            ? BoringDBLogo
+                                            : BoringDBDarkLogo
                                     }
-                                    alt="chartDB"
+                                    alt="BoringDB"
                                     className="h-4 max-w-fit"
                                 />
                             </a>
                         </div>
                     </div>
-                    <div className="flex flex-1 justify-end">
-                        <iframe
-                            src={`https://ghbtns.com/github-btn.html?user=chartdb&repo=chartdb&type=star&size=large&text=false`}
-                            width="40"
-                            height="30"
-                            title="GitHub"
-                        ></iframe>
-                    </div>
+                    <div className="hidden flex-1 justify-end sm:flex"></div>
                 </nav>
                 <div className="flex flex-col p-3 text-center md:px-28 md:text-left">
                     <h1 className="font-primary text-2xl font-bold">

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
-import ChartDBLogo from '@/assets/logo-light.png';
-import ChartDBDarkLogo from '@/assets/logo-dark.png';
+import BoringDBLogo from '@/assets/logo-light.svg';
+import BoringDBDarkLogo from '@/assets/logo-dark.svg';
 import { useTheme } from '@/hooks/use-theme';
 import { LocalConfigProvider } from '@/context/local-config-context/local-config-provider';
 import { ThemeProvider } from '@/context/theme-context/theme-provider';
@@ -66,14 +66,14 @@ const TemplatePageComponent: React.FC = () => {
             <Helmet>
                 {template ? (
                     <>
-                        {HOST_URL !== 'https://chartdb.io' ? (
+                        {HOST_URL !== 'https://db.getboring.io' ? (
                             <link
                                 rel="canonical"
-                                href={`https://chartdb.io/templates/${templateSlug}`}
+                                href={`https://db.getboring.io/templates/${templateSlug}`}
                             />
                         ) : null}
                         <title>
-                            {`Database schema diagram for - ${template.name} | ChartDB`}
+                            {`Database schema diagram for - ${template.name} | BoringDB`}
                         </title>
                         <meta
                             name="description"
@@ -81,7 +81,7 @@ const TemplatePageComponent: React.FC = () => {
                         />
                         <meta
                             property="og:title"
-                            content={`Database schema diagram for - ${template.name} | ChartDB`}
+                            content={`Database schema diagram for - ${template.name} | BoringDB`}
                         />
                         <meta
                             property="og:url"
@@ -96,10 +96,10 @@ const TemplatePageComponent: React.FC = () => {
                             content={`${HOST_URL}${template.image}`}
                         />
                         <meta property="og:type" content="website" />
-                        <meta property="og:site_name" content="ChartDB" />
+                        <meta property="og:site_name" content="BoringDB" />
                         <meta
                             name="twitter:title"
-                            content={`Database schema for - ${template.name} | ChartDB`}
+                            content={`Database schema for - ${template.name} | BoringDB`}
                         />
                         <meta
                             name="twitter:description"
@@ -113,11 +113,11 @@ const TemplatePageComponent: React.FC = () => {
                             name="twitter:card"
                             content="summary_large_image"
                         />
-                        <meta name="twitter:site" content="@ChartDB_io" />
-                        <meta name="twitter:creator" content="@ChartDB_io" />
+                        <meta name="twitter:site" content="" />
+                        <meta name="twitter:creator" content="" />
                     </>
                 ) : (
-                    <title>Database Schema Diagram | ChartDB</title>
+                    <title>Database Schema Diagram | BoringDB</title>
                 )}
             </Helmet>
 
@@ -126,30 +126,23 @@ const TemplatePageComponent: React.FC = () => {
                     <div className="flex flex-1 justify-start gap-x-3">
                         <div className="flex items-center font-primary">
                             <a
-                                href="https://chartdb.io"
+                                href="https://db.getboring.io"
                                 className="cursor-pointer"
                                 rel="noreferrer"
                             >
                                 <img
                                     src={
                                         effectiveTheme === 'light'
-                                            ? ChartDBLogo
-                                            : ChartDBDarkLogo
+                                            ? BoringDBLogo
+                                            : BoringDBDarkLogo
                                     }
-                                    alt="chartDB"
+                                    alt="BoringDB"
                                     className="h-4 max-w-fit"
                                 />
                             </a>
                         </div>
                     </div>
-                    <div className="flex flex-1 justify-end">
-                        <iframe
-                            src={`https://ghbtns.com/github-btn.html?user=chartdb&repo=chartdb&type=star&size=large&text=false`}
-                            width="40"
-                            height="30"
-                            title="GitHub"
-                        ></iframe>
-                    </div>
+                    <div className="hidden flex-1 justify-end sm:flex"></div>
                 </nav>
                 {!template ? (
                     <Spinner size={'large'} className="mt-20 text-pink-600" />
@@ -257,7 +250,7 @@ const TemplatePageComponent: React.FC = () => {
 
                                             <Link
                                                 className="break-all text-sm text-muted-foreground"
-                                                href={`${template.url}?ref=chartdb`}
+                                                href={`${template.url}`}
                                                 target="_blank"
                                             >
                                                 {template.url}

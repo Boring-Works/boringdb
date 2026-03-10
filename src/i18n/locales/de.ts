@@ -470,7 +470,7 @@ export const de: LanguageTranslation = {
         star_us_dialog: {
             title: 'Hilf uns, uns zu verbessern!',
             description:
-                'Gefällt Ihnen ChartDB? Lassen Sie es uns wissen und helfen Sie uns, ChartDB zu verbessern!',
+                'Gefällt Ihnen BoringDB? Lassen Sie es uns wissen und helfen Sie uns, BoringDB zu verbessern!',
             close: 'Nicht jetzt',
             confirm: 'Natürlich!',
         },
@@ -484,7 +484,7 @@ export const de: LanguageTranslation = {
             error: {
                 title: 'Error exporting diagram',
                 description:
-                    'Something went wrong. Need help? support@chartdb.io',
+                    'Something went wrong. Need help? cody@getboring.io',
             },
         },
         // TODO: Translate
@@ -496,7 +496,7 @@ export const de: LanguageTranslation = {
             error: {
                 title: 'Error importing diagram',
                 description:
-                    'The diagram JSON is invalid. Please check the JSON and try again. Need help? support@chartdb.io',
+                    'The diagram JSON is invalid. Please check the JSON and try again. Need help? cody@getboring.io',
             },
         },
         // TODO: Translate

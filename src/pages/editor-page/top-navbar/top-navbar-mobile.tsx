@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import ChartDBLogo from '@/assets/logo-2.png';
+import React from 'react';
+import BoringDBIcon from '@/assets/icon.svg';
 import { DiagramName } from './diagram-name';
 import { LanguageNav } from './language-nav/language-nav';
 import { Menu } from './menu/menu';
@@ -10,17 +10,6 @@ import { MenuIcon } from 'lucide-react';
 export interface TopNavbarMobileProps {}
 
 export const TopNavbarMobile: React.FC<TopNavbarMobileProps> = () => {
-    const renderStars = useCallback(() => {
-        return (
-            <iframe
-                src="https://ghbtns.com/github-btn.html?user=chartdb&repo=chartdb&type=star&size=small&text=false"
-                width="25"
-                height="20"
-                title="GitHub"
-            ></iframe>
-        );
-    }, []);
-
     const { toggleSidebar } = useSidebar();
 
     return (
@@ -36,20 +25,19 @@ export const TopNavbarMobile: React.FC<TopNavbarMobileProps> = () => {
                             <MenuIcon className="size-5" />
                         </Button>
                         <a
-                            href="https://chartdb.io"
+                            href="https://db.getboring.io"
                             className="cursor-pointer"
                             rel="noreferrer"
                         >
                             <img
-                                src={ChartDBLogo}
-                                alt="chartDB"
-                                className="h-4 max-w-fit"
+                                src={BoringDBIcon}
+                                alt="BoringDB"
+                                className="h-6 max-w-fit"
                             />
                         </a>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {renderStars()}
                         <LanguageNav />
                     </div>
                 </div>
