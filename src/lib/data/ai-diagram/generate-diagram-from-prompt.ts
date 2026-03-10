@@ -63,7 +63,7 @@ export async function generateDiagramFromPrompt({
         baseURL: baseUrl,
     });
 
-    const { textStream } = streamText({
+    const { textStream } = await streamText({
         model: openai.chat(modelName),
         system: buildSystemPrompt(databaseType),
         prompt: `Design a ${databaseType} database schema for: ${prompt}`,
