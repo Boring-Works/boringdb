@@ -7,11 +7,13 @@ A fork of [ChartDB](https://github.com/chartdb/chartdb) deployed on Cloudflare W
 This fork adds:
 
 - **AI Diagram Generator** — Describe a database in plain English, get a visual ERD. Streams DBML in real-time via Monaco editor, then imports through ChartDB's existing 1085-line DBML pipeline to create a full interactive diagram
+- **SQL Auto-Detection Fallback** — When the AI model generates SQL `CREATE TABLE` statements instead of DBML, the import automatically detects the format via `detectImportMethod()` and routes through ChartDB's existing `sqlImportToDiagram` pipeline instead of the DBML parser
 - **Robust DBML Syntax Fixer** — `fixDBMLSyntax()` post-processor that handles 15+ categories of LLM output variations, ensuring reliable parsing regardless of model output format
 - **CompilerError diagnostics** — Proper error extraction from `@dbml/core`'s non-standard `CompilerError` (not an Error instance, uses `.diags` array)
 - **Cloudflare Workers deployment** — Static assets + API on a single Worker at `db.getboring.io`
 - **Workers AI proxy** — Dual-model routing with no API keys exposed to the browser
 - **Stream normalization** — `normalizeAIStream()` converts between Workers AI's legacy and OpenAI SSE formats for full AI SDK compatibility
+- **Browser cache busting** — Worker serves HTML with `no-cache` headers via `run_worker_first = true` to ensure fresh JS bundles on every deploy
 
 ## Architecture
 
@@ -37,10 +39,16 @@ User prompt -> streamText() via AI SDK -> Worker -> Workers AI (qwen2.5-coder-32
 Monaco editor (live DBML preview with auto-scroll)
      |
      v (user clicks "Create Diagram")
-stripCodeFences() -> fixDBMLSyntax() -> @dbml/core Parser -> importDBMLToDiagram()
-     |                                                              |
-     v                                                              v
-Cleaned DBML text                                    Visual ERD (stored in IndexedDB)
+stripCodeFences() -> detectImportMethod()
+     |                      |
+     |--- DBML detected --->  fixDBMLSyntax() -> @dbml/core Parser -> importDBMLToDiagram()
+     |                                                                        |
+     |--- SQL detected ---> sqlImportToDiagram() (auto-detects dialect)       |
+     |                              |                                         |
+     v                              v                                         v
+Cleaned text              Diagram (from SQL)                    Diagram (from DBML)
+                                    \                                  /
+                                     --> stored in IndexedDB <--------
 ```
 
 ### Key Files
@@ -51,8 +59,10 @@ Cleaned DBML text                                    Visual ERD (stored in Index
 | `wrangler.toml` | Deployment config — routes, AI binding, model vars |
 | `public/config.js` | Runtime browser config — endpoint, models, feature flags |
 | `src/lib/data/ai-diagram/generate-diagram-from-prompt.ts` | AI service — system prompt, `fixDBMLSyntax()`, streaming |
-| `src/dialogs/create-diagram-dialog/ai-generate-step.tsx` | AI generate UI — prompt input, DBML preview, import handler |
-| `src/dialogs/create-diagram-dialog/create-diagram-dialog.tsx` | Parent dialog — `importAiDiagram` callback to DBML pipeline |
+| `src/dialogs/create-diagram-dialog/ai-generate-step.tsx` | AI generate UI — prompt input, DBML preview, format detection, import routing |
+| `src/dialogs/create-diagram-dialog/create-diagram-dialog.tsx` | Parent dialog — `importAiDiagram` (DBML) and `importAiSQL` (SQL) callbacks |
+| `src/lib/data/sql-import/index.ts` | SQL DDL import — auto-detects dialect (PG, MySQL, SQLite, SQL Server, Oracle) |
+| `src/lib/import-method/detect-import-method.ts` | Format detection — determines if text is DBML, SQL DDL, or JSON |
 | `src/lib/data/import-metadata/import-dbml.ts` | DBML import pipeline (1085 lines) — parses DBML to diagram objects |
 | `src/lib/data/sql-export/export-sql-script.ts` | AI SQL export logic (uses `gpt-oss-120b` model) |
 
@@ -176,7 +186,7 @@ binding = "AI"
 directory = "./dist"
 not_found_handling = "single-page-application"
 binding = "ASSETS"
-run_worker_first = ["/api/v1/*"]
+run_worker_first = true
 ```
 
 ## CORS
@@ -210,6 +220,8 @@ All diagram data is stored in the browser's IndexedDB via Dexie.js. No server-si
 | `e362d30` | Robust DBML syntax fixing for diverse LLM output formats |
 | `51c3d62` | Comprehensive README with full architecture and DBML fixer docs |
 | `82c7240` | Handle streaming DBML output quirks and CompilerError diagnostics |
+| `4db3cad` | Update README and handoff with streaming fixes and CompilerError handling |
+| `55a9414` | Auto-detect SQL output from AI and route through SQL importer |
 
 ## Upstream
 
