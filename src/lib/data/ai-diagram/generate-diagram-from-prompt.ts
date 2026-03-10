@@ -88,9 +88,52 @@ function fixDBMLSyntax(dbml: string): string {
         enumBlock.replace(/^\s*'([^']+)'\s*$/gm, '  $1')
     );
 
+    // Normalize uppercase TABLE/REF keywords to DBML lowercase
+    result = result.replace(/^TABLE\b/gm, 'Table');
+    result = result.replace(/^REF\b/gm, 'Ref');
+    result = result.replace(/^ENUM\b/gm, 'Enum');
+
+    // Convert inline ENUM(val1, val2) type to varchar(50)
+    // DBML doesn't support inline enum — requires separate Enum block
+    result = result.replace(/\bENUM\s*\([^)]+\)/gi, 'varchar(50)');
+
+    // Convert SQL-style bare constraints to DBML bracket syntax
+    // Process field lines that have bare NOT NULL, UNIQUE, DEFAULT outside brackets
+    result = result.replace(
+        /^(\s+\w+\s+\w[\w(),.]*)((?:\s+(?:NOT\s+NULL|UNIQUE|DEFAULT\s+\S+))+)\s*$/gim,
+        (_match, fieldDef, constraints) => {
+            const attrs: string[] = [];
+            if (/\bUNIQUE\b/i.test(constraints)) attrs.push('unique');
+            if (/\bNOT\s+NULL\b/i.test(constraints)) attrs.push('not null');
+            const defaultMatch = /\bDEFAULT\s+(\S+)/i.exec(constraints);
+            if (defaultMatch) {
+                const val = defaultMatch[1];
+                // SQL expressions get backtick-wrapped in DBML
+                if (/^\w+\(/.test(val) || /^CURRENT_/i.test(val)) {
+                    attrs.push(`default: \`${val}\``);
+                } else {
+                    attrs.push(`default: ${val}`);
+                }
+            }
+            return attrs.length > 0
+                ? `${fieldDef} [${attrs.join(', ')}]`
+                : fieldDef;
+        }
+    );
+
     result = result
+        // Wrap bare default: outside brackets into [default: ...]
+        .replace(
+            /(?<!\[[\w\s,:'"`]*)\bdefault:\s*(`[^`]+`|'[^']*'|"[^"]*"|\d[\d.]*|true|false|null|\w+)(?!\s*[\],])/gm,
+            '[default: $1]'
+        )
         // Wrap bare function calls in defaults with backticks
         .replace(/default:\s*(?!`)(\w+\([^)]*\))/g, 'default: `$1`')
+        // Quote bare identifier defaults (e.g. default: subscriber → default: 'subscriber')
+        .replace(
+            /default:\s+(?!true\b|false\b|null\b|`|'|"|\d)([a-zA-Z_]\w*)(?=[\s,\]))])/g,
+            "default: '$1'"
+        )
         // Fix empty varchar parens
         .replace(/varchar\(\s*\)/gi, 'varchar(255)')
         // Fix empty numeric parens
@@ -103,6 +146,25 @@ function fixDBMLSyntax(dbml: string): string {
         .replace(/\[\s*,/g, '[')
         .replace(/,\s*\]/g, ']')
         .replace(/\[\s*\]/g, '');
+
+    // Fix bare index/unique lines → proper "indexes { ... }" blocks
+    // Handles: index(field), index (field), unique(f1, f2), unique (f1, f2)
+    result = result.replace(
+        /(?:^\s*(?:index|unique)\s*\([^)]+\)\s*$\n?)+/gim,
+        (match) => {
+            const entries: string[] = [];
+            const re = /(index|unique)\s*\(([^)]+)\)/gi;
+            for (const m of match.matchAll(re)) {
+                const kind = m[1].toLowerCase();
+                const fields = m[2].trim();
+                const wrap = fields.includes(',');
+                const col = wrap ? `(${fields})` : fields;
+                const attr = kind === 'unique' ? ' [unique]' : '';
+                entries.push(`    ${col}${attr}`);
+            }
+            return `\n  indexes {\n${entries.join('\n')}\n  }\n`;
+        }
+    );
 
     return result;
 }
