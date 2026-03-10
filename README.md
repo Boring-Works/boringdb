@@ -6,8 +6,9 @@ A fork of [ChartDB](https://github.com/chartdb/chartdb) deployed on Cloudflare W
 
 This fork adds:
 
+- **AI Diagram Generator** — Describe a database in plain English, get a visual ERD. Uses `@cf/qwen/qwen2.5-coder-32b-instruct` (code-optimized model) to stream DBML, then imports via the existing DBML pipeline
 - **Cloudflare Workers deployment** — Static assets + API on a single Worker
-- **Workers AI proxy** — AI-powered SQL export using `@cf/openai/gpt-oss-120b` (128K context), no API keys exposed to the browser
+- **Workers AI proxy** — Dual-model routing: `gpt-oss-120b` for SQL export reasoning, `qwen2.5-coder-32b-instruct` for diagram generation. No API keys exposed to the browser
 - **OpenAI-compatible API** — Worker translates between Vercel AI SDK and Workers AI, with SSE stream filtering for strict compatibility
 - **Custom domain routing** — Served from `db.getboring.io` via Cloudflare DNS
 
@@ -17,18 +18,22 @@ This fork adds:
 Browser (Vite SPA)
   |-- Static assets --> Cloudflare Workers Assets (./dist)
   |-- /api/v1/*     --> Worker (worker.ts)
-                         |-- Workers AI binding (@cf/openai/gpt-oss-120b)
+                         |-- MODEL_MAP routes to:
+                         |   gpt-oss-120b          → @cf/openai/gpt-oss-120b (SQL export)
+                         |   qwen2.5-coder-32b     → @cf/qwen/qwen2.5-coder-32b-instruct (diagrams)
 ```
 
-The Worker intercepts `/api/v1/*` requests and proxies them to Workers AI. All other requests are served as static assets with SPA fallback routing.
+The Worker intercepts `/api/v1/*` requests and proxies them to Workers AI. The client sends a model name in the request body; the Worker resolves it via `MODEL_MAP` to the correct Workers AI model path. All other requests are served as static assets with SPA fallback routing.
 
 ### Key Files
 
 | File | Purpose |
 |------|---------|
-| `worker.ts` | Cloudflare Worker — CORS, AI proxy, stream filtering |
-| `wrangler.toml` | Deployment config — routes, AI binding, assets |
-| `public/config.js` | Runtime browser config — endpoint, model, feature flags |
+| `worker.ts` | Cloudflare Worker — CORS, dual-model AI proxy, stream filtering |
+| `wrangler.toml` | Deployment config — routes, AI binding, model vars |
+| `public/config.js` | Runtime browser config — endpoint, models, feature flags |
+| `src/lib/data/ai-diagram/generate-diagram-from-prompt.ts` | AI diagram generator — prompt to DBML streaming |
+| `src/dialogs/create-diagram-dialog/ai-generate-step.tsx` | AI generate step UI — prompt input + DBML preview |
 | `src/lib/data/sql-export/export-sql-script.ts` | AI SQL export logic (uses `@ai-sdk/openai`) |
 
 ### Workers AI Stream Filtering
