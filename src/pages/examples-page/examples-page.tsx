@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
-import BoringDBLogo from '@/assets/logo-light.svg';
-import BoringDBDarkLogo from '@/assets/logo-dark.svg';
+import BoringDBLogo from '@/assets/logo-light.png';
+import BoringDBDarkLogo from '@/assets/logo-dark.png';
 import type { Example } from './examples-data/examples-data';
 import { examples } from './examples-data/examples-data';
 import { ExampleCard } from './example-card';

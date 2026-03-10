@@ -1,7 +1,7 @@
 import React from 'react';
 
-import BoringDBLogo from '@/assets/logo-light.svg';
-import BoringDBDarkLogo from '@/assets/logo-dark.svg';
+import BoringDBLogo from '@/assets/logo-light.png';
+import BoringDBDarkLogo from '@/assets/logo-dark.png';
 import { useTheme } from '@/hooks/use-theme';
 
 export const TopNavbarMock: React.FC = () => {

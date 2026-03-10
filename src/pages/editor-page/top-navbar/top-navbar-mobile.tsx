@@ -1,5 +1,5 @@
 import React from 'react';
-import BoringDBIcon from '@/assets/icon.svg';
+import BoringDBIcon from '@/assets/icon.png';
 import { DiagramName } from './diagram-name';
 import { LanguageNav } from './language-nav/language-nav';
 import { Menu } from './menu/menu';

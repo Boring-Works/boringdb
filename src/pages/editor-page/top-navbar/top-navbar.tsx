@@ -1,6 +1,6 @@
 import React from 'react';
-import BoringDBLogo from '@/assets/logo-light.svg';
-import BoringDBDarkLogo from '@/assets/logo-dark.svg';
+import BoringDBLogo from '@/assets/logo-light.png';
+import BoringDBDarkLogo from '@/assets/logo-dark.png';
 import { useTheme } from '@/hooks/use-theme';
 import { DiagramName } from './diagram-name';
 import { LastSaved } from './last-saved';

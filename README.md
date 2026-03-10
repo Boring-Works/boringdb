@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="src/assets/icon.svg" width="80" height="80" alt="BoringDB" />
+  <img src="public/boringdb-logo.png" width="300" alt="BoringDB" />
 </p>
-
-<h1 align="center">BoringDB</h1>
 
 <p align="center">
   <strong>The database schema designer that just works.</strong>
