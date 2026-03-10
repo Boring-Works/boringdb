@@ -21,6 +21,9 @@ function buildSystemPrompt(databaseType: DatabaseType): string {
 
     return `You are a database architect. Generate a database schema in DBML (Database Markup Language) format.
 
+IMPORTANT: You MUST output DBML syntax, NOT SQL. Do NOT use CREATE TABLE. Use the DBML "Table" keyword instead.
+If you are unsure about DBML syntax, output standard SQL CREATE TABLE statements as a fallback — but DBML is strongly preferred.
+
 CRITICAL DBML syntax rules:
 - Output ONLY valid DBML. No markdown, no explanations, no code blocks.
 - For default values that are expressions/functions, wrap in backticks: default: \`now()\`, default: \`gen_random_uuid()\`
@@ -83,8 +86,25 @@ Table posts {
  * Applied before passing to the DBML parser.
  */
 function fixDBMLSyntax(dbml: string): string {
+    // Strip preamble text before the first DBML element (Table, Enum, Ref, Project)
+    // LLMs often output explanations like "Here is the schema:" before the DBML
+    let result = dbml.replace(
+        /^[\s\S]*?(?=^(?:Table|Enum|Ref|Project)\b)/m,
+        ''
+    );
+
+    // Strip trailing text after the last closing brace (explanations after DBML)
+    result = result.replace(
+        /\}[^}]*?(?:Here|Note:|This|The |I |---|\*\*|##)[\s\S]*$/m,
+        '}'
+    );
+
+    // Remove Project blocks — dbmlv2 parser handles them but they're not needed
+    // and can cause "custom element" errors if malformed
+    result = result.replace(/^Project\s+\w+\s*\{[^}]*\}\s*/gm, '');
+
     // Fix quoted enum values: 'admin' → admin (inside Enum blocks only)
-    let result = dbml.replace(/^(Enum\s+\w+\s*\{[\s\S]*?\})/gm, (enumBlock) =>
+    result = result.replace(/^(Enum\s+\w+\s*\{[\s\S]*?\})/gm, (enumBlock) =>
         enumBlock.replace(/^\s*'([^']+)'\s*$/gm, '  $1')
     );
 
@@ -126,6 +146,11 @@ function fixDBMLSyntax(dbml: string): string {
         )
         // Wrap bare function calls in defaults with backticks
         .replace(/default:\s*(?!`)(\w+\([^)]*\))/g, 'default: `$1`')
+        // Wrap known SQL keywords in backticks (must run before generic identifier quoter)
+        .replace(
+            /default:\s+(?!`)(current_timestamp|current_date|current_time|now|autoincrement)\b/gi,
+            (_match, keyword) => `default: \`${keyword}\``
+        )
         // Quote bare identifier defaults (e.g. default: subscriber → default: 'subscriber')
         .replace(
             /default:\s+(?!true\b|false\b|null\b|`|'|"|\d)([a-zA-Z_]\w*)(?=[\s,\]))])/g,

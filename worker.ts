@@ -81,11 +81,26 @@ function normalizeAIStream(aiStream: ReadableStream | Response) {
                     try {
                         const parsed = JSON.parse(trimmed.slice(6));
 
-                        // Already OpenAI format — pass through
+                        // Already OpenAI format — ensure content is a string
+                        // Workers AI sometimes sends numeric content (e.g. "content":5)
                         if (parsed.choices && Array.isArray(parsed.choices)) {
-                            controller.enqueue(
-                                encoder.encode(trimmed + '\n\n'),
-                            );
+                            const delta = parsed.choices[0]?.delta;
+                            if (
+                                delta &&
+                                'content' in delta &&
+                                typeof delta.content !== 'string'
+                            ) {
+                                delta.content = String(delta.content);
+                                controller.enqueue(
+                                    encoder.encode(
+                                        `data: ${JSON.stringify(parsed)}\n\n`,
+                                    ),
+                                );
+                            } else {
+                                controller.enqueue(
+                                    encoder.encode(trimmed + '\n\n'),
+                                );
+                            }
                             continue;
                         }
 
@@ -98,7 +113,9 @@ function normalizeAIStream(aiStream: ReadableStream | Response) {
                                     {
                                         index: 0,
                                         delta: {
-                                            content: parsed.response,
+                                            content: String(
+                                                parsed.response,
+                                            ),
                                         },
                                         finish_reason: null,
                                     },
@@ -131,7 +148,19 @@ export default {
 
         // Only handle /api/v1/* requests — everything else goes to static assets
         if (!url.pathname.startsWith('/api/v1/')) {
-            return env.ASSETS.fetch(request);
+            const response = await env.ASSETS.fetch(request);
+            // Prevent browser from caching HTML — ensures new deploys are picked up
+            if (
+                response.headers.get('content-type')?.includes('text/html')
+            ) {
+                const newResponse = new Response(response.body, response);
+                newResponse.headers.set(
+                    'Cache-Control',
+                    'no-cache, no-store, must-revalidate'
+                );
+                return newResponse;
+            }
+            return response;
         }
 
         const origin = request.headers.get('Origin') || '';

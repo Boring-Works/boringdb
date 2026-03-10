@@ -107,6 +107,34 @@ export const CreateDiagramDialog: React.FC<CreateDiagramDialogProps> = ({
         ]
     );
 
+    const importAiSQL = useCallback(
+        async (sql: string) => {
+            const diagram = await sqlImportToDiagram({
+                sqlContent: sql,
+                sourceDatabaseType: databaseType,
+                targetDatabaseType: databaseType,
+            });
+
+            diagram.name = `Diagram ${diagramNumber}`;
+
+            await addDiagram({ diagram });
+            await updateConfig({
+                config: { defaultDiagramId: diagram.id },
+            });
+
+            closeCreateDiagramDialog();
+            navigate(`/diagrams/${diagram.id}`);
+        },
+        [
+            databaseType,
+            diagramNumber,
+            addDiagram,
+            updateConfig,
+            closeCreateDiagramDialog,
+            navigate,
+        ]
+    );
+
     const importNewDiagram = useCallback(
         async ({
             selectedTables,
@@ -306,6 +334,7 @@ export const CreateDiagramDialog: React.FC<CreateDiagramDialogProps> = ({
                             setStep(CreateDiagramDialogStep.SELECT_DATABASE)
                         }
                         onImport={importAiDiagram}
+                        onImportSQL={importAiSQL}
                     />
                 ) : step === CreateDiagramDialogStep.SELECT_TABLES ? (
                     <SelectTables

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/button/button';
 import { CodeSnippet } from '@/components/code-snippet/code-snippet';
 import { Spinner } from '@/components/spinner/spinner';
@@ -7,7 +7,10 @@ import {
     generateDiagramFromPrompt,
     fixDBMLSyntax,
 } from '@/lib/data/ai-diagram/generate-diagram-from-prompt';
+import { detectImportMethod } from '@/lib/import-method/detect-import-method';
 import { Sparkles, ArrowLeft, Play, Eraser, Check } from 'lucide-react';
+import { useMonaco } from '@monaco-editor/react';
+import { setupDBMLLanguage } from '@/components/code-snippet/languages/dbml-language';
 import {
     DialogDescription,
     DialogFooter,
@@ -29,12 +32,14 @@ export interface AIGenerateStepProps {
     databaseType: DatabaseType;
     onBack: () => void;
     onImport: (dbml: string) => Promise<void> | void;
+    onImportSQL?: (sql: string) => Promise<void> | void;
 }
 
 export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
     databaseType,
     onBack,
     onImport,
+    onImportSQL,
 }) => {
     const { toast } = useToast();
     const [prompt, setPrompt] = useState('');
@@ -43,6 +48,13 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
     const [isImporting, setIsImporting] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const monaco = useMonaco();
+
+    useEffect(() => {
+        if (monaco) {
+            setupDBMLLanguage(monaco);
+        }
+    }, [monaco]);
 
     const handleGenerate = useCallback(async () => {
         if (!prompt.trim()) return;
@@ -81,16 +93,30 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
     }, [prompt, databaseType, toast]);
 
     const handleImport = useCallback(async () => {
-        const cleaned = fixDBMLSyntax(stripCodeFences(dbml));
-        console.log('[AI Diagram] Cleaned DBML for import:', cleaned);
+        const stripped = stripCodeFences(dbml);
+        const format = detectImportMethod(stripped);
+        console.log('[AI Diagram] Detected format:', format);
+
         setIsImporting(true);
         try {
-            await onImport(cleaned);
+            if (format === 'ddl' && onImportSQL) {
+                // AI generated SQL instead of DBML — route through SQL importer
+                console.log('[AI Diagram] Routing through SQL importer');
+                await onImportSQL(stripped);
+            } else {
+                // DBML path (default)
+                const cleaned = fixDBMLSyntax(stripped);
+                console.log(
+                    '[AI Diagram] Cleaned DBML for import:',
+                    cleaned.substring(0, 200)
+                );
+                await onImport(cleaned);
+            }
         } catch (error: unknown) {
             console.error('[AI Diagram] Import error:', error);
             // @dbml/core throws CompilerError which is NOT an Error instance
             // It has a .diags array with parse error details
-            let message = 'Invalid DBML schema';
+            let message = 'Invalid schema';
             if (error instanceof Error) {
                 message = error.message;
             } else if (error && typeof error === 'object' && 'diags' in error) {
@@ -108,7 +134,7 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
         } finally {
             setIsImporting(false);
         }
-    }, [dbml, onImport, toast]);
+    }, [dbml, onImport, onImportSQL, toast]);
 
     const handleClear = useCallback(() => {
         if (abortControllerRef.current) {
@@ -140,7 +166,7 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                         Describe your database:
                     </label>
                     <textarea
-                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex max-h-[80px] min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                         placeholder="e.g., An e-commerce system with users, products, orders, reviews, and categories. Include a wishlist and shipping addresses."
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
@@ -180,7 +206,7 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                             Generated DBML:
                         </label>
                         <CodeSnippet
-                            className="max-h-[50vh] min-h-[350px] w-full"
+                            className="h-[50vh] min-h-[300px] w-full"
                             code={dbml}
                             language="dbml"
                             autoScroll={!isComplete}
@@ -193,6 +219,7 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                                         horizontal: 'auto',
                                     },
                                     wordWrap: 'on',
+                                    fontSize: 13,
                                 },
                             }}
                         />
