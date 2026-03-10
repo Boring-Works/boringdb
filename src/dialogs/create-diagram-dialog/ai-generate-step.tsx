@@ -82,12 +82,24 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
 
     const handleImport = useCallback(async () => {
         const cleaned = fixDBMLSyntax(stripCodeFences(dbml));
+        console.log('[AI Diagram] Cleaned DBML for import:', cleaned);
         setIsImporting(true);
         try {
             await onImport(cleaned);
         } catch (error: unknown) {
-            const message =
-                error instanceof Error ? error.message : 'Invalid DBML schema';
+            console.error('[AI Diagram] Import error:', error);
+            // @dbml/core throws CompilerError which is NOT an Error instance
+            // It has a .diags array with parse error details
+            let message = 'Invalid DBML schema';
+            if (error instanceof Error) {
+                message = error.message;
+            } else if (error && typeof error === 'object' && 'diags' in error) {
+                type Diag = { message: string };
+                const diags = (error as { diags: Diag[] }).diags;
+                if (Array.isArray(diags)) {
+                    message = diags.map((d) => d.message).join('; ');
+                }
+            }
             toast({
                 title: 'Import failed',
                 description: `Could not create diagram: ${message}. Try regenerating.`,

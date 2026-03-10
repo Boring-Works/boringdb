@@ -93,12 +93,10 @@ function fixDBMLSyntax(dbml: string): string {
     result = result.replace(/^REF\b/gm, 'Ref');
     result = result.replace(/^ENUM\b/gm, 'Enum');
 
-    // Convert inline ENUM(val1, val2) type to varchar(50)
-    // DBML doesn't support inline enum — requires separate Enum block
-    result = result.replace(/\bENUM\s*\([^)]+\)/gi, 'varchar(50)');
+    // Convert inline enum(val1, val2) type to varchar(50) — case-insensitive
+    result = result.replace(/\benum\s*\([^)]+\)/gi, 'varchar(50)');
 
     // Convert SQL-style bare constraints to DBML bracket syntax
-    // Process field lines that have bare NOT NULL, UNIQUE, DEFAULT outside brackets
     result = result.replace(
         /^(\s+\w+\s+\w[\w(),.]*)((?:\s+(?:NOT\s+NULL|UNIQUE|DEFAULT\s+\S+))+)\s*$/gim,
         (_match, fieldDef, constraints) => {
@@ -108,7 +106,6 @@ function fixDBMLSyntax(dbml: string): string {
             const defaultMatch = /\bDEFAULT\s+(\S+)/i.exec(constraints);
             if (defaultMatch) {
                 const val = defaultMatch[1];
-                // SQL expressions get backtick-wrapped in DBML
                 if (/^\w+\(/.test(val) || /^CURRENT_/i.test(val)) {
                     attrs.push(`default: \`${val}\``);
                 } else {
@@ -140,6 +137,12 @@ function fixDBMLSyntax(dbml: string): string {
         .replace(/numeric\(\s*,?\s*\)/gi, 'numeric(10,2)')
         // Fix decimal empty parens
         .replace(/decimal\(\s*,?\s*\)/gi, 'decimal(10,2)')
+        // Fix truncated "not" → "not null" inside brackets
+        .replace(/\bnot(?!\s+null)\b(?=[\s,\]])/gi, 'not null')
+        // Remove bare "index" attribute inside brackets — only after [ or ,
+        .replace(/(?<=[[,])\s*index(?=[\s,\]])/g, '')
+        // Remove check(...) constraints inside brackets (not valid DBML)
+        .replace(/,?\s*check\s*\([^)]*\)/gi, '')
         // Remove empty default annotations: [default:] or [default: ]
         .replace(/,?\s*default:\s*(?=[\],])/g, '')
         // Clean up empty brackets that might result
@@ -147,19 +150,20 @@ function fixDBMLSyntax(dbml: string): string {
         .replace(/,\s*\]/g, ']')
         .replace(/\[\s*\]/g, '');
 
-    // Fix bare index/unique lines → proper "indexes { ... }" blocks
-    // Handles: index(field), index (field), unique(f1, f2), unique (f1, f2)
+    // Fix bare index/unique/primary key lines → proper "indexes { ... }" blocks
     result = result.replace(
-        /(?:^\s*(?:index|unique)\s*\([^)]+\)\s*$\n?)+/gim,
+        /(?:^\s*(?:index|unique|primary\s+key)\s*\([^)]+\)\s*$\n?)+/gim,
         (match) => {
             const entries: string[] = [];
-            const re = /(index|unique)\s*\(([^)]+)\)/gi;
+            const re = /(index|unique|primary\s+key)\s*\(([^)]+)\)/gi;
             for (const m of match.matchAll(re)) {
-                const kind = m[1].toLowerCase();
+                const kind = m[1].toLowerCase().replace(/\s+/g, ' ');
                 const fields = m[2].trim();
                 const wrap = fields.includes(',');
                 const col = wrap ? `(${fields})` : fields;
-                const attr = kind === 'unique' ? ' [unique]' : '';
+                let attr = '';
+                if (kind === 'unique') attr = ' [unique]';
+                else if (kind === 'primary key') attr = ' [pk]';
                 entries.push(`    ${col}${attr}`);
             }
             return `\n  indexes {\n${entries.join('\n')}\n  }\n`;
