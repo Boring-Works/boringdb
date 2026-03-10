@@ -7,7 +7,8 @@ A fork of [ChartDB](https://github.com/chartdb/chartdb) deployed on Cloudflare W
 This fork adds:
 
 - **AI Diagram Generator** — Describe a database in plain English, get a visual ERD. Streams DBML in real-time via Monaco editor, then imports through ChartDB's existing 1085-line DBML pipeline to create a full interactive diagram
-- **Robust DBML Syntax Fixer** — `fixDBMLSyntax()` post-processor that handles 12+ categories of LLM output variations, ensuring reliable parsing regardless of model output format
+- **Robust DBML Syntax Fixer** — `fixDBMLSyntax()` post-processor that handles 15+ categories of LLM output variations, ensuring reliable parsing regardless of model output format
+- **CompilerError diagnostics** — Proper error extraction from `@dbml/core`'s non-standard `CompilerError` (not an Error instance, uses `.diags` array)
 - **Cloudflare Workers deployment** — Static assets + API on a single Worker at `db.getboring.io`
 - **Workers AI proxy** — Dual-model routing with no API keys exposed to the browser
 - **Stream normalization** — `normalizeAIStream()` converts between Workers AI's legacy and OpenAI SSE formats for full AI SDK compatibility
@@ -82,7 +83,19 @@ LLMs produce DBML with various syntax issues. `fixDBMLSyntax()` handles all of t
 | Quoted enum values | `'admin'` inside Enum block | `admin` |
 | Bare index lines | `index(user_id)` | `indexes { user_id }` |
 | Bare unique constraints | `unique(post_id, user_id)` | `indexes { (post_id, user_id) [unique] }` |
+| Bare primary key lines | `primary key (post_id, tag_id)` | `indexes { (post_id, tag_id) [pk] }` |
+| Truncated `not` in brackets | `[unique, not]` | `[unique, not null]` |
+| Bare `index` inside brackets | `[ref: > users.id, index]` | `[ref: > users.id]` (removed) |
+| Inline `check()` constraints | `check(rating >= 1 and rating <= 5)` | removed (not valid DBML) |
 | Markdown code fences | `` ```dbml ... ``` `` | stripped before processing |
+
+### CompilerError Handling
+
+`@dbml/core` throws a `CompilerError` that is **not** an `Error` instance — `instanceof Error` returns false. It has no `.message` property. Instead it carries a `.diags` array of diagnostic objects: `{ message: string, location: { start: { line: number } } }`. The import handler in `ai-generate-step.tsx` checks for `.diags` to extract meaningful error messages for the toast notification.
+
+### DBML Parser Format
+
+The import pipeline uses `parser.parse(content, 'dbmlv2')` — **not** `'dbml'`. The `dbmlv2` format has different syntax requirements. All testing validates against `dbmlv2` to match production behavior.
 
 ### AI SDK Compatibility
 
@@ -195,6 +208,8 @@ All diagram data is stored in the browser's IndexedDB via Dexie.js. No server-si
 | `98287b0` | Improve AI DBML quality with better prompt and syntax fixing |
 | `3246670` | Add Create Diagram error handling + visible DBML editor scrolling |
 | `e362d30` | Robust DBML syntax fixing for diverse LLM output formats |
+| `51c3d62` | Comprehensive README with full architecture and DBML fixer docs |
+| `82c7240` | Handle streaming DBML output quirks and CompilerError diagnostics |
 
 ## Upstream
 
