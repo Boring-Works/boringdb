@@ -161,14 +161,6 @@ export default {
         if (url.pathname === '/api/v1/chat/completions') {
             try {
                 const body = await request.json();
-                console.log('REQUEST:', JSON.stringify({
-                    method: request.method,
-                    origin,
-                    hasMessages: !!body.messages?.length,
-                    stream: body.stream,
-                    model: body.model,
-                    keys: Object.keys(body),
-                }));
                 let messages = body.messages || [];
 
                 // AI SDK sends 'prompt' — convert to messages format

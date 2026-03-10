@@ -28,7 +28,7 @@ function stripCodeFences(text: string): string {
 export interface AIGenerateStepProps {
     databaseType: DatabaseType;
     onBack: () => void;
-    onImport: (dbml: string) => void;
+    onImport: (dbml: string) => Promise<void> | void;
 }
 
 export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
@@ -40,6 +40,7 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
     const [prompt, setPrompt] = useState('');
     const [dbml, setDbml] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -79,6 +80,24 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
         }
     }, [prompt, databaseType, toast]);
 
+    const handleImport = useCallback(async () => {
+        const cleaned = fixDBMLSyntax(stripCodeFences(dbml));
+        setIsImporting(true);
+        try {
+            await onImport(cleaned);
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : 'Invalid DBML schema';
+            toast({
+                title: 'Import failed',
+                description: `Could not create diagram: ${message}. Try regenerating.`,
+                variant: 'destructive',
+            });
+        } finally {
+            setIsImporting(false);
+        }
+    }, [dbml, onImport, toast]);
+
     const handleClear = useCallback(() => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
@@ -114,6 +133,7 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         disabled={isGenerating}
+                        maxLength={2000}
                     />
                     <div className="flex gap-2">
                         <Button
@@ -153,6 +173,16 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                             language="dbml"
                             autoScroll={!isComplete}
                             isComplete={isComplete}
+                            editorProps={{
+                                height: '100%',
+                                options: {
+                                    scrollbar: {
+                                        vertical: 'auto',
+                                        horizontal: 'auto',
+                                    },
+                                    wordWrap: 'on',
+                                },
+                            }}
                         />
                     </div>
                 )}
@@ -163,13 +193,20 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                     Back
                 </Button>
                 <Button
-                    disabled={!isComplete || !dbml.trim()}
-                    onClick={() =>
-                        onImport(fixDBMLSyntax(stripCodeFences(dbml)))
-                    }
+                    disabled={!isComplete || !dbml.trim() || isImporting}
+                    onClick={handleImport}
                 >
-                    <Check className="mr-2 size-4" />
-                    Create Diagram
+                    {isImporting ? (
+                        <>
+                            <Spinner className="mr-2 size-4" />
+                            Creating...
+                        </>
+                    ) : (
+                        <>
+                            <Check className="mr-2 size-4" />
+                            Create Diagram
+                        </>
+                    )}
                 </Button>
             </DialogFooter>
         </>
