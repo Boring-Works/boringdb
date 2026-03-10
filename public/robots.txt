@@ -1,4 +1,4 @@
 User-agent: *
-Disallow: /
+Disallow:
 
-Sitemap: https://app.chartdb.io/sitemap.xml
+Sitemap: https://db.getboring.io/sitemap.xml
