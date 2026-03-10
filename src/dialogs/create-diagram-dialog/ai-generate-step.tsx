@@ -14,6 +14,14 @@ import {
 } from '@/components/dialog/dialog';
 import { useToast } from '@/components/toast/use-toast';
 
+/** Strip markdown code fences that the model may wrap DBML in */
+function stripCodeFences(text: string): string {
+    return text
+        .replace(/^```[\w]*\n?/gm, '')
+        .replace(/```\s*$/gm, '')
+        .trim();
+}
+
 export interface AIGenerateStepProps {
     databaseType: DatabaseType;
     onBack: () => void;
@@ -137,7 +145,7 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                             Generated DBML:
                         </label>
                         <CodeSnippet
-                            className="h-[250px] w-full"
+                            className="max-h-[50vh] min-h-[350px] w-full"
                             code={dbml}
                             language="dbml"
                             autoScroll={!isComplete}
@@ -153,7 +161,7 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
                 </Button>
                 <Button
                     disabled={!isComplete || !dbml.trim()}
-                    onClick={() => onImport(dbml)}
+                    onClick={() => onImport(stripCodeFences(dbml))}
                 >
                     <Check className="mr-2 size-4" />
                     Create Diagram
