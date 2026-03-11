@@ -57,8 +57,9 @@ npm run deploy       # Deploy to Cloudflare (runs wrangler deploy)
 
 ## Deployment
 - **GitHub:** github.com/Boring-Works/boringdb (public)
-- **Worker name:** `chartdb` (kept for route binding — cosmetic only)
-- **Route:** db.getboring.io/* → zone getboring.io (managed by wrangler.toml, NOT the dashboard)
+- **Worker name:** `chartdb` (cosmetic only, can't rename due to existing config)
+- **Domain:** Custom Domain `db.getboring.io` (configured in CF dashboard, NOT wrangler.toml)
+- **Routing:** Custom Domain only — NO routes in wrangler.toml (routes cause 10020 conflicts)
 - **CI/CD:** Cloudflare Workers Builds (dashboard-configured, auto-deploys on push to main)
   - Build command: `npm run build`
   - Deploy command: `npm run deploy`
@@ -69,8 +70,9 @@ npm run deploy       # Deploy to Cloudflare (runs wrangler deploy)
 ### Workers Builds Gotchas
 - `.nvmrc` controls Node version (currently v24, Workers Builds respects it)
 - `wrangler` is pinned as a devDependency — do NOT rely on npx downloading it
-- Routes MUST be in `wrangler.toml`, NOT the CF dashboard, or deploys fail with error 10020
+- Do NOT add `routes` to wrangler.toml — Custom Domain handles routing, routes cause deploy conflicts
 - Build needs `NODE_OPTIONS='--max-old-space-size=4096'` — Monaco Editor causes OOM at 2GB default
+- `wrangler deploy` will say "No deploy targets" — this is normal, Custom Domain handles it
 
 ## Branding
 - Logo source: `/Users/codyboring/Downloads/BoringDB-logo.jpeg` (2048x2048)
@@ -93,7 +95,7 @@ These are internal code identifiers that would break things if renamed:
 - `useChartDB` hook, `ChartDBProvider`, `chartdb-context/` — core state management
 - `HIDE_CHARTDB_CLOUD` env var — controls cloud feature visibility
 - `Dexie('ChartDB')` — IndexedDB database name (user data!)
-- `wrangler.toml name = "chartdb"` — worker route binding
+- `wrangler.toml name = "chartdb"` — worker identity, Custom Domain bound to it
 
 ## Decisions
 | Decision | Reason |
@@ -105,7 +107,7 @@ These are internal code identifiers that would break things if renamed:
 | DBML + SQL dual import | Models output SQL despite DBML prompt |
 | Stream normalization in worker | Workers AI legacy format breaks AI SDK |
 | `run_worker_first = true` | Needed for HTML cache-busting headers |
-| Routes in wrangler.toml only | Dashboard route + wrangler.toml = 10020 conflict on deploy |
+| Custom Domain over Routes | Routes cause 10020 conflicts; Custom Domain is faster + cleaner |
 | `NODE_OPTIONS` 4GB heap | Monaco Editor OOMs the 2GB default in CI |
 | wrangler as devDependency | Prevents CI from downloading fresh copy every build |
 | `manualChunks` for monaco/react-flow | Reduces peak memory during Vite bundling |
