@@ -132,8 +132,10 @@ export const TemplatesPageHelmet: React.FC<TemplatesPageHelmetProps> = ({
             )}
 
             <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:site" content="" />
-            <meta name="twitter:creator" content="" />
+            <meta
+                name="twitter:image"
+                content="https://db.getboring.io/social-preview.png"
+            />
         </Helmet>
     );
 };

@@ -218,7 +218,7 @@ export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
                             components={[
                                 <a
                                     key={0}
-                                    href="https://github.com/getboring/chartdb"
+                                    href="https://github.com/Boring-Works/boringdb"
                                     target="_blank"
                                     rel="noreferrer"
                                     className="text-pink-600 hover:underline"

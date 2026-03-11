@@ -113,8 +113,6 @@ const TemplatePageComponent: React.FC = () => {
                             name="twitter:card"
                             content="summary_large_image"
                         />
-                        <meta name="twitter:site" content="" />
-                        <meta name="twitter:creator" content="" />
                     </>
                 ) : (
                     <title>Database Schema Diagram | BoringDB</title>

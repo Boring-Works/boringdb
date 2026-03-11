@@ -100,12 +100,8 @@ export const Menu: React.FC<MenuProps> = () => {
         });
     }, [openExportImageDialog]);
 
-    const openChartDBDocs = useCallback(() => {
-        window.open('https://github.com/getboring/chartdb', '_blank');
-    }, []);
-
-    const openJoinDiscord = useCallback(() => {
-        window.open('https://github.com/getboring/chartdb', '_blank');
+    const openSourceCode = useCallback(() => {
+        window.open('https://github.com/Boring-Works/boringdb', '_blank');
     }, []);
 
     const exportSQL = useCallback(
@@ -489,11 +485,8 @@ export const Menu: React.FC<MenuProps> = () => {
             <MenubarMenu>
                 <MenubarTrigger>{t('menu.help.help')}</MenubarTrigger>
                 <MenubarContent>
-                    <MenubarItem onClick={openChartDBDocs}>
+                    <MenubarItem onClick={openSourceCode}>
                         {t('menu.help.docs_website')}
-                    </MenubarItem>
-                    <MenubarItem onClick={openJoinDiscord}>
-                        {t('menu.help.join_discord')}
                     </MenubarItem>
                 </MenubarContent>
             </MenubarMenu>

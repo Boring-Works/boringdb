@@ -17,7 +17,11 @@ export const HelmetData: React.FC = () => (
             content="Database schema designer. Visualize, design, and export your database diagrams."
         />
         <meta property="og:url" content="https://db.getboring.io" />
-        <meta name="twitter:card" content="summary" />
+        <meta
+            property="og:image"
+            content="https://db.getboring.io/social-preview.png"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta
             name="twitter:title"
             content="BoringDB - Database Schema Designer"
@@ -25,6 +29,10 @@ export const HelmetData: React.FC = () => (
         <meta
             name="twitter:description"
             content="Database schema designer. Visualize, design, and export your database diagrams."
+        />
+        <meta
+            name="twitter:image"
+            content="https://db.getboring.io/social-preview.png"
         />
         <title>BoringDB - Database Schema Designer</title>
     </Helmet>
