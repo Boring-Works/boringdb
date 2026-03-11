@@ -24,16 +24,21 @@ MODIFICATIONS FROM UPSTREAM (chartdb/chartdb):
 This is a modified version of ChartDB, originally created by the ChartDB
 contributors and licensed under AGPL-3.0.
 
-Summary of modifications (2026):
+Summary of modifications (2025–2026):
 - Rebranded from ChartDB to BoringDB
 - Added AI-powered schema generation via Cloudflare Workers AI
 - Added SQL auto-detection fallback (detects SQL output and routes through
   the existing SQL import pipeline instead of requiring DBML)
 - Added robust DBML syntax fixer (fixDBMLSyntax) for LLM output normalization
 - Added Cloudflare Workers deployment with AI proxy and stream normalization
+- Added Drizzle ORM schema export (deterministic code generation for
+  PostgreSQL, MySQL, and SQLite via drizzle-orm/pg-core, mysql-core, sqlite-core)
+- Added 6 AI-focused schema templates (RAG Pipeline, AI Gateway, Prompt
+  Management, Evals Platform, Multi-Agent Orchestration, MCP Server Registry)
+- Added template generator CLI (scripts/generate-template.ts)
 - Removed third-party analytics (Fathom)
 - Removed external social links and GitHub star prompts
-- SVG logo and branding replacement
+- PNG logo and branding replacement
 
 Source code: https://github.com/Boring-Works/boringdb
 Upstream: https://github.com/chartdb/chartdb

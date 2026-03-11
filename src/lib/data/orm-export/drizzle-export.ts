@@ -48,10 +48,14 @@ const JS_RESERVED = new Set([
 ]);
 
 function toJsIdentifier(name: string): string {
-    // Convert snake_case to camelCase
-    let id = name.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-    // Prefix with underscore if starts with digit
-    if (/^\d/.test(id)) {
+    // Replace non-alphanumeric chars (hyphens, dots, spaces, etc.) with underscores, then camelCase
+    let id = name
+        .replace(/[^a-zA-Z0-9_]/g, '_')
+        .replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    // Remove any remaining underscores at start (from leading special chars)
+    id = id.replace(/^_+/, '');
+    // Prefix with underscore if starts with digit or is empty
+    if (!id || /^\d/.test(id)) {
         id = '_' + id;
     }
     // Suffix with Table if JS reserved word
@@ -311,10 +315,10 @@ function mapSqliteType(field: DBField): ColumnMapping {
 }
 
 function buildPrecisionScale(field: DBField): string {
-    if (field.precision && field.scale) {
+    if (field.precision != null && field.scale != null) {
         return `, { precision: ${field.precision}, scale: ${field.scale} }`;
     }
-    if (field.precision) {
+    if (field.precision != null) {
         return `, { precision: ${field.precision} }`;
     }
     return '';
@@ -513,6 +517,9 @@ function buildRelations(
         // Deduplicate: only process each relationship once per side
         const seen = new Set<string>();
 
+        // Track property names to disambiguate duplicates (e.g. two FKs to same table)
+        const propCount = new Map<string, number>();
+
         for (const rel of rels) {
             const relKey = `${rel.id}-${table.id}`;
             if (seen.has(relKey)) continue;
@@ -533,13 +540,32 @@ function buildRelations(
             if (table.id === rel.sourceTableId) {
                 // This table holds the FK — it has a "one" relation to the target
                 const targetVar = toJsIdentifier(targetTable.name);
+                let propName = targetVar;
+                const count = propCount.get(propName) || 0;
+                if (count > 0) {
+                    propName = `${propName}_${toJsIdentifier(sourceField.name)}`;
+                }
+                propCount.set(targetVar, count + 1);
                 relLines.push(
-                    `  ${targetVar}: one(${targetVar}, { fields: [${tableVar}.${toJsIdentifier(sourceField.name)}], references: [${targetVar}.${toJsIdentifier(targetField.name)}] })`
+                    `  ${propName}: one(${targetVar}, { fields: [${tableVar}.${toJsIdentifier(sourceField.name)}], references: [${targetVar}.${toJsIdentifier(targetField.name)}] })`
                 );
             } else {
-                // This table is referenced — it has a "many" relation from the source
+                // This table is referenced — check cardinality
                 const sourceVar = toJsIdentifier(sourceTable.name);
-                relLines.push(`  ${sourceVar}: many(${sourceVar})`);
+                let propName = sourceVar;
+                const count = propCount.get(propName) || 0;
+                if (count > 0) {
+                    propName = `${propName}_${toJsIdentifier(sourceField.name)}`;
+                }
+                propCount.set(sourceVar, count + 1);
+
+                if (rel.sourceCardinality === 'one') {
+                    // 1:1 — emit one() without fields (reverse side)
+                    relLines.push(`  ${propName}: one(${sourceVar})`);
+                } else {
+                    // 1:many — emit many()
+                    relLines.push(`  ${propName}: many(${sourceVar})`);
+                }
             }
         }
 

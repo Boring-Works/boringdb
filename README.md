@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/Boring-Works/boringdb?color=0d9488&label=License" alt="AGPL-3.0" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-0d9488?style=flat" alt="AGPL-3.0" /></a>
   <img src="https://img.shields.io/github/actions/workflow/status/Boring-Works/boringdb/ci.yaml?label=CI&color=0d9488" alt="CI" />
 </p>
 
@@ -29,6 +29,8 @@ BoringDB is none of those.
 - **Describe what you need.** Type "e-commerce with users, products, orders, and reviews" and get a working schema.
 - **Handles whatever the model throws.** DBML, SQL, markdown-wrapped code blocks — it auto-detects and parses it all.
 - **Exports real DDL.** PostgreSQL, MySQL, SQLite, SQL Server, MariaDB, Oracle. Pick your dialect.
+- **Exports Drizzle ORM.** Generate a complete `schema.ts` with proper types, modifiers, indexes, and relations.
+- **50+ templates.** Start from real-world schemas — Laravel, Django, WordPress, AI/ML pipelines, and more.
 - **Deploys on the edge.** One Cloudflare Worker. Static assets + schema generation. No origin server.
 
 ---
@@ -51,12 +53,46 @@ Describe your database in plain English
    Edit tables, relationships, indexes visually
               |
               v
-   Export as SQL for your target database
+   Export as SQL, Drizzle ORM, PNG, SVG, or JSON
 ```
 
 **Supported databases:** PostgreSQL, MySQL, SQLite, SQL Server, MariaDB, Oracle, CockroachDB
 
-**Supported import formats:** DBML v2, SQL DDL (all dialects), JSON metadata
+**Supported import formats:** DBML v2, SQL DDL (all dialects), JSON diagram
+
+**Supported exports:** SQL DDL (all dialects), Drizzle ORM schema, PNG, JPG, SVG, JSON
+
+---
+
+## Key Features
+
+### Visual ERD Editor
+Drag-and-drop tables. Click to add fields, indexes, and constraints. Draw relationships between tables. Everything updates in real-time.
+
+### AI Schema Generation
+Describe your database in plain English and get a working schema generated on the edge via Cloudflare Workers AI. Supports DBML and SQL output with automatic format detection.
+
+### Drizzle ORM Export
+Export your visual schema as a complete Drizzle ORM `schema.ts` file. Supports `drizzle-orm/pg-core`, `drizzle-orm/mysql-core`, and `drizzle-orm/sqlite-core` with:
+- Correct type mapping per dialect (60+ SQL types covered)
+- Modifiers: `.primaryKey()`, `.notNull()`, `.unique()`, `.default()`, `.references()`, `.array()`
+- Index generation with `index()` and `uniqueIndex()`
+- Relations with `one()` and `many()` (respects cardinality)
+
+### SQL Export
+Export your diagram as DDL for any supported database. Cross-dialect translation (e.g., MySQL diagram → PostgreSQL DDL) uses AI; same-dialect export is deterministic.
+
+### Smart Format Detection
+The schema generator asks for DBML but models sometimes output SQL. BoringDB detects the format automatically and routes through the correct parser — DBML goes through `@dbml/core`, SQL goes through dialect-specific importers. No manual intervention needed.
+
+### DBML Syntax Fixer
+LLMs produce DBML with 15+ categories of syntax issues — uppercase keywords, bare SQL constraints, unquoted defaults, empty type params, inline enums. The `fixDBMLSyntax()` post-processor normalizes all of them before parsing.
+
+### 50+ Schema Templates
+Start from real-world database schemas across multiple categories:
+- **Frameworks:** Laravel, Django, WordPress, Adonis, Voyager
+- **Applications:** Twitter, Airbnb, Hacker News, Lobsters, Pixelfed
+- **AI/ML:** RAG Pipeline, AI Gateway, Prompt Management, Evals Platform, Multi-Agent Orchestration, MCP Server Registry
 
 ---
 
@@ -105,27 +141,12 @@ window.env = {
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React, Vite, TypeScript, Tailwind CSS, Monaco Editor |
+| Frontend | React 18, Vite, TypeScript, Tailwind CSS, Monaco Editor, React Flow |
 | Hosting | Cloudflare Workers + Workers AI |
-| Storage | Browser IndexedDB via Dexie.js |
+| Storage | Browser IndexedDB via Dexie.js (all data stays on your machine) |
 | Parsing | @dbml/core (DBML v2), custom SQL dialect importers |
 | Schema Gen | Vercel AI SDK, streaming SSE, format auto-detection |
-
----
-
-## Key Features
-
-### Visual ERD Editor
-Drag-and-drop tables. Click to add fields, indexes, and constraints. Draw relationships between tables. Everything updates in real-time.
-
-### Smart Format Detection
-The schema generator asks for DBML but models sometimes output SQL. BoringDB detects the format automatically and routes through the correct parser — DBML goes through `@dbml/core`, SQL goes through dialect-specific importers. No manual intervention needed.
-
-### DBML Syntax Fixer
-LLMs produce DBML with 15+ categories of syntax issues — uppercase keywords, bare SQL constraints, unquoted defaults, empty type params, inline enums. The `fixDBMLSyntax()` post-processor normalizes all of them before parsing.
-
-### SQL Export
-Export your diagram as DDL for any supported database. The exporter handles type mapping, constraint syntax, and dialect-specific features automatically.
+| ORM Export | Custom Drizzle ORM code generator (deterministic, no AI) |
 
 ---
 
@@ -146,9 +167,17 @@ The codebase uses ESLint + Prettier for linting. Run `npm run lint` before submi
 
 ## License
 
-**AGPL-3.0** — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+**[AGPL-3.0](LICENSE)** — GNU Affero General Public License v3.0.
 
-BoringDB is a modified version of [ChartDB](https://github.com/chartdb/chartdb) by the ChartDB contributors. All modifications are documented in the [NOTICE](NOTICE) file. Under AGPL-3.0, if you deploy a modified version as a network service, you must make the source code available to your users.
+BoringDB is a modified version of [ChartDB](https://github.com/chartdb/chartdb), originally created by the ChartDB contributors and licensed under AGPL-3.0. All modifications from the upstream project are documented in the [NOTICE](NOTICE) file.
+
+**What this means:**
+- You can use, modify, and self-host BoringDB freely.
+- If you modify and deploy it as a network service, you must make your source code available to users under the same AGPL-3.0 license.
+- The full license text is in [LICENSE](LICENSE). The modification log is in [NOTICE](NOTICE).
+
+**Source code:** [github.com/Boring-Works/boringdb](https://github.com/Boring-Works/boringdb)
+**Upstream:** [github.com/chartdb/chartdb](https://github.com/chartdb/chartdb)
 
 ---
 
