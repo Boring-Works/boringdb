@@ -87,7 +87,9 @@ function mapPostgresType(field: DBField): ColumnMapping {
             return { constructor: `integer('${name}')` };
         case 'bigint':
         case 'int8':
-            return { constructor: `bigint('${name}')` };
+            return {
+                constructor: `bigint('${name}', { mode: 'bigint' })`,
+            };
         case 'smallint':
         case 'int2':
             return { constructor: `smallint('${name}')` };
@@ -181,7 +183,9 @@ function mapMysqlType(field: DBField): ColumnMapping {
         case 'integer':
             return { constructor: `int('${name}')` };
         case 'bigint':
-            return { constructor: `bigint('${name}')` };
+            return {
+                constructor: `bigint('${name}', { mode: 'bigint' })`,
+            };
         case 'smallint':
             return { constructor: `smallint('${name}')` };
         case 'mediumint':
@@ -280,9 +284,10 @@ function mapSqliteType(field: DBField): ColumnMapping {
         case 'float':
         case 'double':
         case 'double_precision':
+            return { constructor: `real('${name}')` };
         case 'numeric':
         case 'decimal':
-            return { constructor: `real('${name}')` };
+            return { constructor: `numeric('${name}')` };
         case 'blob':
         case 'binary':
         case 'varbinary':
@@ -782,8 +787,8 @@ function addTypeImport(
             float: 'real',
             double: 'real',
             double_precision: 'real',
-            numeric: 'real',
-            decimal: 'real',
+            numeric: 'numeric',
+            decimal: 'numeric',
             blob: 'blob',
             binary: 'blob',
             boolean: 'integer',
