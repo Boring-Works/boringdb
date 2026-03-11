@@ -9,7 +9,7 @@ npm install
 npm run dev          # Vite dev server on :5173
 npx wrangler dev     # Worker for AI schema generation
 npm run build        # Production build → dist/
-npx wrangler deploy  # Deploy to Cloudflare
+npm run deploy       # Deploy to Cloudflare (runs wrangler deploy)
 ```
 
 ## Stack
@@ -58,11 +58,19 @@ npx wrangler deploy  # Deploy to Cloudflare
 ## Deployment
 - **GitHub:** github.com/Boring-Works/boringdb (public)
 - **Worker name:** `chartdb` (kept for route binding — cosmetic only)
-- **Route:** db.getboring.io/* → zone getboring.io
-- **CI:** `.github/workflows/ci.yaml` (lint, typecheck, build, test)
-- **Deploy:** `.github/workflows/deploy.yaml` (wrangler-action on push to main)
-- **Secrets needed in GitHub:** `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
+- **Route:** db.getboring.io/* → zone getboring.io (managed by wrangler.toml, NOT the dashboard)
+- **CI/CD:** Cloudflare Workers Builds (dashboard-configured, auto-deploys on push to main)
+  - Build command: `npm run build`
+  - Deploy command: `npm run deploy`
+  - Build cache: Enabled
 - **Local branch:** `boring/cloudflare-workers` pushes to remote `main`
+- **Local deploy:** `npm run build && npm run deploy`
+
+### Workers Builds Gotchas
+- `.nvmrc` controls Node version (currently v24, Workers Builds respects it)
+- `wrangler` is pinned as a devDependency — do NOT rely on npx downloading it
+- Routes MUST be in `wrangler.toml`, NOT the CF dashboard, or deploys fail with error 10020
+- Build needs `NODE_OPTIONS='--max-old-space-size=4096'` — Monaco Editor causes OOM at 2GB default
 
 ## Branding
 - Logo source: `/Users/codyboring/Downloads/BoringDB-logo.jpeg` (2048x2048)
@@ -97,3 +105,8 @@ These are internal code identifiers that would break things if renamed:
 | DBML + SQL dual import | Models output SQL despite DBML prompt |
 | Stream normalization in worker | Workers AI legacy format breaks AI SDK |
 | `run_worker_first = true` | Needed for HTML cache-busting headers |
+| Routes in wrangler.toml only | Dashboard route + wrangler.toml = 10020 conflict on deploy |
+| `NODE_OPTIONS` 4GB heap | Monaco Editor OOMs the 2GB default in CI |
+| wrangler as devDependency | Prevents CI from downloading fresh copy every build |
+| `manualChunks` for monaco/react-flow | Reduces peak memory during Vite bundling |
+| `localStorage` try/catch in utils.ts | `getWorkspaceId()` must work in Node test environments |

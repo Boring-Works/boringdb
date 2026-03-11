@@ -19,10 +19,11 @@ wrangler dev
 
 ## Development
 
-- **Lint:** `npm run lint` (ESLint + Prettier)
-- **Typecheck:** `npx tsc --noEmit`
-- **Test:** `npm test`
-- **Build:** `npm run build`
+- **Lint:** `npm run lint` (ESLint + Prettier, zero warnings enforced)
+- **Typecheck:** `npx tsc -b`
+- **Test:** `npm test` (875 tests via Vitest)
+- **Build:** `npm run build` (lint + typecheck + Vite build)
+- **Deploy:** `npm run deploy` (requires Cloudflare auth via `wrangler login`)
 
 ## Pull Requests
 

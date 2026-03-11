@@ -14,7 +14,6 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-0d9488?style=flat" alt="AGPL-3.0" /></a>
-  <img src="https://img.shields.io/github/actions/workflow/status/Boring-Works/boringdb/ci.yaml?label=CI&color=0d9488" alt="CI" />
 </p>
 
 ---
@@ -121,7 +120,7 @@ wrangler dev
 
 ```bash
 npm run build
-wrangler deploy
+npm run deploy
 ```
 
 Configure in `public/config.js`:
