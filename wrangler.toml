@@ -4,9 +4,11 @@ compatibility_flags = ["nodejs_compat"]
 main = "./worker.ts"
 workers_dev = false
 
-routes = [
-  { pattern = "db.getboring.io/*", zone_name = "getboring.io" }
-]
+# Route is managed in the Cloudflare dashboard — do NOT declare here
+# or wrangler deploy will fail with "route already exists" (code 10020)
+# routes = [
+#   { pattern = "db.getboring.io/*", zone_name = "getboring.io" }
+# ]
 
 [vars]
 AI_MODEL = "gpt-oss-120b"
