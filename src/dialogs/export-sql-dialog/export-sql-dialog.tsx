@@ -195,6 +195,7 @@ export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
                 setIsScriptLoading(false);
             } catch {
                 setError(true);
+                setIsScriptLoading(false);
             }
         };
         fetchScript();

@@ -5,9 +5,60 @@ import type { DBField } from '@/lib/domain/db-field';
 import type { DBRelationship } from '@/lib/domain/db-relationship';
 // --- Helpers ---
 
+const JS_RESERVED = new Set([
+    'break',
+    'case',
+    'catch',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'enum',
+    'export',
+    'extends',
+    'false',
+    'finally',
+    'for',
+    'function',
+    'if',
+    'import',
+    'in',
+    'instanceof',
+    'let',
+    'new',
+    'null',
+    'return',
+    'super',
+    'switch',
+    'this',
+    'throw',
+    'true',
+    'try',
+    'typeof',
+    'undefined',
+    'var',
+    'void',
+    'while',
+    'with',
+    'yield',
+]);
+
 function toJsIdentifier(name: string): string {
-    // Convert snake_case table/column names to camelCase JS identifiers
-    return name.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    // Convert snake_case to camelCase
+    let id = name.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    // Prefix with underscore if starts with digit
+    if (/^\d/.test(id)) {
+        id = '_' + id;
+    }
+    // Suffix with Table if JS reserved word
+    if (JS_RESERVED.has(id)) {
+        id = id + 'Table';
+    }
+    return id;
 }
 
 function escapeString(s: string): string {
@@ -298,7 +349,12 @@ function buildModifiers(
     if (
         !field.nullable &&
         !field.primaryKey &&
-        !(isSerial && dbType === DatabaseType.POSTGRESQL)
+        !(
+            isSerial &&
+            (dbType === DatabaseType.POSTGRESQL ||
+                dbType === DatabaseType.MYSQL ||
+                dbType === DatabaseType.MARIADB)
+        )
     ) {
         mods += '.notNull()';
     }

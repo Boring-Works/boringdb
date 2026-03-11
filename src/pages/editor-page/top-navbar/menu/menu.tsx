@@ -291,11 +291,7 @@ export const Menu: React.FC<MenuProps> = () => {
                             <MenubarItem
                                 onClick={() =>
                                     openExportSQLDialog({
-                                        targetDatabaseType:
-                                            databaseType ===
-                                            DatabaseType.GENERIC
-                                                ? DatabaseType.POSTGRESQL
-                                                : databaseType,
+                                        targetDatabaseType: databaseType,
                                         exportFormat: 'drizzle',
                                     })
                                 }
