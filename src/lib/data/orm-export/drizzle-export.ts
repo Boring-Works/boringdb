@@ -3,6 +3,8 @@ import { DatabaseType } from '@/lib/domain/database-type';
 import type { DBTable } from '@/lib/domain/db-table';
 import type { DBField } from '@/lib/domain/db-field';
 import type { DBRelationship } from '@/lib/domain/db-relationship';
+import type { DBCustomType } from '@/lib/domain/db-custom-type';
+import { DBCustomTypeKind } from '@/lib/domain/db-custom-type';
 // --- Helpers ---
 
 const JS_RESERVED = new Set([
@@ -76,9 +78,21 @@ interface ColumnMapping {
     options?: string;
 }
 
-function mapPostgresType(field: DBField): ColumnMapping {
+function mapPostgresType(
+    field: DBField,
+    enumMap?: Map<string, DBCustomType>
+): ColumnMapping {
     const typeId = field.type.id.toLowerCase();
     const name = field.name;
+
+    // PG enum — reference the pgEnum variable
+    if (typeId === 'enum' || typeId === 'user-defined') {
+        const enumType = enumMap?.get(field.type.name);
+        if (enumType?.values && enumType.values.length > 0) {
+            const enumVar = toJsIdentifier(enumType.name) + 'Enum';
+            return { constructor: `${enumVar}('${name}')` };
+        }
+    }
 
     switch (typeId) {
         case 'int':
@@ -174,9 +188,23 @@ function mapPostgresType(field: DBField): ColumnMapping {
     }
 }
 
-function mapMysqlType(field: DBField): ColumnMapping {
+function mapMysqlType(
+    field: DBField,
+    enumMap?: Map<string, DBCustomType>
+): ColumnMapping {
     const typeId = field.type.id.toLowerCase();
     const name = field.name;
+
+    // MySQL enum — inline mysqlEnum
+    if (typeId === 'enum') {
+        const enumType = enumMap?.get(field.type.name);
+        if (enumType?.values && enumType.values.length > 0) {
+            const vals = enumType.values
+                .map((v) => `'${escapeString(v)}'`)
+                .join(', ');
+            return { constructor: `mysqlEnum('${name}', [${vals}])` };
+        }
+    }
 
     switch (typeId) {
         case 'int':
@@ -261,6 +289,11 @@ function mapMysqlType(field: DBField): ColumnMapping {
 function mapSqliteType(field: DBField): ColumnMapping {
     const typeId = field.type.id.toLowerCase();
     const name = field.name;
+
+    // SQLite has no enum — fall back to text
+    if (typeId === 'enum') {
+        return { constructor: `text('${name}')` };
+    }
 
     switch (typeId) {
         case 'integer':
@@ -589,7 +622,8 @@ function buildRelations(
 function collectImports(
     tables: DBTable[],
     relationships: DBRelationship[],
-    dbType: DatabaseType
+    dbType: DatabaseType,
+    enumMap?: Map<string, DBCustomType>
 ): { tableImports: Set<string>; sharedImports: Set<string> } {
     const tableImports = new Set<string>();
     const sharedImports = new Set<string>();
@@ -621,7 +655,29 @@ function collectImports(
 
         for (const field of table.fields) {
             const typeId = field.type.id.toLowerCase();
-            addTypeImport(tableImports, typeId, dbType);
+
+            // Handle enum imports separately
+            if ((typeId === 'enum' || typeId === 'user-defined') && enumMap) {
+                const enumType = enumMap.get(field.type.name);
+                if (enumType) {
+                    const isPg =
+                        dbType === DatabaseType.POSTGRESQL ||
+                        dbType === DatabaseType.COCKROACHDB;
+                    const isMysql =
+                        dbType === DatabaseType.MYSQL ||
+                        dbType === DatabaseType.MARIADB;
+                    if (isPg) {
+                        tableImports.add('pgEnum');
+                    } else if (isMysql) {
+                        tableImports.add('mysqlEnum');
+                    }
+                    // Skip addTypeImport for enum fields with known values
+                } else {
+                    addTypeImport(tableImports, typeId, dbType);
+                }
+            } else {
+                addTypeImport(tableImports, typeId, dbType);
+            }
 
             // Check for array modifier (PG only)
             if (field.isArray && dbType === DatabaseType.POSTGRESQL) {
@@ -839,18 +895,22 @@ function getTableConstructor(dbType: DatabaseType): string {
     }
 }
 
-function mapType(field: DBField, dbType: DatabaseType): ColumnMapping {
+function mapType(
+    field: DBField,
+    dbType: DatabaseType,
+    enumMap?: Map<string, DBCustomType>
+): ColumnMapping {
     switch (dbType) {
         case DatabaseType.POSTGRESQL:
         case DatabaseType.COCKROACHDB:
-            return mapPostgresType(field);
+            return mapPostgresType(field, enumMap);
         case DatabaseType.MYSQL:
         case DatabaseType.MARIADB:
-            return mapMysqlType(field);
+            return mapMysqlType(field, enumMap);
         case DatabaseType.SQLITE:
             return mapSqliteType(field);
         default:
-            return mapPostgresType(field);
+            return mapPostgresType(field, enumMap);
     }
 }
 
@@ -860,6 +920,7 @@ export function exportDrizzle({ diagram }: { diagram: Diagram }): string {
     const dbType = diagram.databaseType;
     const tables = (diagram.tables ?? []).filter((t) => !t.isView);
     const relationships = diagram.relationships ?? [];
+    const customTypes = diagram.customTypes ?? [];
 
     // Build table map
     const tableMap = new Map<string, DBTable>();
@@ -867,11 +928,24 @@ export function exportDrizzle({ diagram }: { diagram: Diagram }): string {
         tableMap.set(table.id, table);
     }
 
+    // Build enum map from custom types
+    const enumMap = new Map<string, DBCustomType>();
+    for (const ct of customTypes) {
+        if (
+            ct.kind === DBCustomTypeKind.enum &&
+            ct.values &&
+            ct.values.length > 0
+        ) {
+            enumMap.set(ct.name, ct);
+        }
+    }
+
     // Collect imports
     const { tableImports, sharedImports } = collectImports(
         tables,
         relationships,
-        dbType
+        dbType,
+        enumMap
     );
 
     const lines: string[] = [];
@@ -895,6 +969,23 @@ export function exportDrizzle({ diagram }: { diagram: Diagram }): string {
 
     lines.push('');
 
+    // Generate pgEnum declarations (PG only — MySQL uses inline mysqlEnum)
+    const isPg =
+        dbType === DatabaseType.POSTGRESQL ||
+        dbType === DatabaseType.COCKROACHDB;
+    if (isPg && enumMap.size > 0) {
+        for (const [, ct] of enumMap) {
+            const enumVar = toJsIdentifier(ct.name) + 'Enum';
+            const vals = ct
+                .values!.map((v) => `'${escapeString(v)}'`)
+                .join(', ');
+            lines.push(
+                `export const ${enumVar} = pgEnum('${escapeString(ct.name)}', [${vals}]);`
+            );
+        }
+        lines.push('');
+    }
+
     // Generate table definitions
     const tableConstructor = getTableConstructor(dbType);
 
@@ -904,7 +995,7 @@ export function exportDrizzle({ diagram }: { diagram: Diagram }): string {
         // Column definitions
         const colLines: string[] = [];
         for (const field of table.fields) {
-            const mapping = mapType(field, dbType);
+            const mapping = mapType(field, dbType, enumMap);
             const modifiers = buildModifiers(
                 field,
                 dbType,
