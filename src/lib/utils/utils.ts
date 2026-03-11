@@ -15,14 +15,18 @@ export const emptyFn = (): any => undefined;
 export const generateId = () => randomId();
 
 export const getWorkspaceId = (): string => {
-    let workspaceId = localStorage.getItem(UUID_KEY);
+    try {
+        let workspaceId = localStorage.getItem(UUID_KEY);
 
-    if (!workspaceId) {
-        workspaceId = randomId(8);
-        localStorage.setItem(UUID_KEY, workspaceId);
+        if (!workspaceId) {
+            workspaceId = randomId(8);
+            localStorage.setItem(UUID_KEY, workspaceId);
+        }
+
+        return workspaceId;
+    } catch {
+        return randomId(8);
     }
-
-    return workspaceId;
 };
 
 export const generateDiagramId = () => {
