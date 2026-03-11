@@ -34,6 +34,10 @@ export default defineConfig({
         rollupOptions: {
             external: (id) => /__test__/.test(id),
             output: {
+                manualChunks: {
+                    'monaco-editor': ['monaco-editor'],
+                    'react-flow': ['@xyflow/react'],
+                },
                 assetFileNames: (assetInfo) => {
                     if (
                         assetInfo.names &&
