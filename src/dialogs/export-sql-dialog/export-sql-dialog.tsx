@@ -18,6 +18,7 @@ import {
     exportBaseSQL,
     exportSQL,
 } from '@/lib/data/sql-export/export-sql-script';
+import { exportDrizzle } from '@/lib/data/orm-export/drizzle-export';
 import { hasCrossDialectSupport } from '@/lib/data/sql-export/cross-dialect';
 import { databaseTypeToLabelMap } from '@/lib/databases';
 import { DatabaseType } from '@/lib/domain/database-type';
@@ -34,13 +35,17 @@ import {
 } from '@/lib/domain/diagram-filter/filter';
 import { defaultSchemas } from '@/lib/data/default-schemas';
 
+export type ExportFormat = 'sql' | 'drizzle';
+
 export interface ExportSQLDialogProps extends BaseDialogProps {
     targetDatabaseType: DatabaseType;
+    exportFormat?: ExportFormat;
 }
 
 export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
     dialog,
     targetDatabaseType,
+    exportFormat = 'sql',
 }) => {
     const { closeExportSQLDialog } = useDialog();
     const { currentDiagram } = useChartDB();
@@ -143,6 +148,11 @@ export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
             }),
         };
 
+        // Drizzle export — always deterministic
+        if (exportFormat === 'drizzle') {
+            return Promise.resolve(exportDrizzle({ diagram: filteredDiagram }));
+        }
+
         // Use deterministic export if available and AI export is not selected
         if (hasDeterministicPath && !useAIExport) {
             return Promise.resolve(
@@ -165,6 +175,7 @@ export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
         filter,
         hasDeterministicPath,
         useAIExport,
+        exportFormat,
     ]);
 
     useEffect(() => {
@@ -239,10 +250,14 @@ export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
                 <div className="flex items-center justify-center gap-1">
                     <Sparkles className="h-5" />
                     <Label className="text-lg">
-                        {t('export_sql_dialog.loading.text', {
-                            databaseType:
-                                databaseTypeToLabelMap[targetDatabaseType],
-                        })}
+                        {exportFormat === 'drizzle'
+                            ? 'Generating Drizzle schema...'
+                            : t('export_sql_dialog.loading.text', {
+                                  databaseType:
+                                      databaseTypeToLabelMap[
+                                          targetDatabaseType
+                                      ],
+                              })}
                     </Label>
                 </div>
                 <div className="flex items-center justify-center gap-1">
@@ -252,7 +267,7 @@ export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
                 </div>
             </div>
         ),
-        [targetDatabaseType, t]
+        [targetDatabaseType, t, exportFormat]
     );
     return (
         <Dialog
@@ -268,18 +283,25 @@ export const ExportSQLDialog: React.FC<ExportSQLDialogProps> = ({
                 showClose
             >
                 <DialogHeader>
-                    <DialogTitle>{t('export_sql_dialog.title')}</DialogTitle>
+                    <DialogTitle>
+                        {exportFormat === 'drizzle'
+                            ? 'Export Drizzle Schema'
+                            : t('export_sql_dialog.title')}
+                    </DialogTitle>
                     <DialogDescription>
-                        {t('export_sql_dialog.description', {
-                            databaseType:
-                                targetDatabaseType === DatabaseType.GENERIC
-                                    ? 'SQL'
-                                    : databaseTypeToLabelMap[
-                                          targetDatabaseType
-                                      ],
-                        })}
+                        {exportFormat === 'drizzle'
+                            ? 'Drizzle ORM schema.ts — ready to drop into your project'
+                            : t('export_sql_dialog.description', {
+                                  databaseType:
+                                      targetDatabaseType ===
+                                      DatabaseType.GENERIC
+                                          ? 'SQL'
+                                          : databaseTypeToLabelMap[
+                                                targetDatabaseType
+                                            ],
+                              })}
                     </DialogDescription>
-                    {showExportModeToggle && (
+                    {showExportModeToggle && exportFormat !== 'drizzle' && (
                         <div className="flex items-center pt-2">
                             <div className="grid h-auto grid-cols-2 gap-1 rounded-xl border bg-background p-1">
                                 <button

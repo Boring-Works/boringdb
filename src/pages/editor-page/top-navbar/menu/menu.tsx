@@ -287,6 +287,21 @@ export const Menu: React.FC<MenuProps> = () => {
                                     </MenubarShortcut>
                                 </MenubarItem>
                             ) : null}
+                            <MenubarSeparator />
+                            <MenubarItem
+                                onClick={() =>
+                                    openExportSQLDialog({
+                                        targetDatabaseType:
+                                            databaseType ===
+                                            DatabaseType.GENERIC
+                                                ? DatabaseType.POSTGRESQL
+                                                : databaseType,
+                                        exportFormat: 'drizzle',
+                                    })
+                                }
+                            >
+                                Drizzle ORM
+                            </MenubarItem>
                         </MenubarSubContent>
                     </MenubarSub>
                     <MenubarSub>

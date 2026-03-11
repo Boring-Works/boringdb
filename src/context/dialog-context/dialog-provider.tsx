@@ -83,8 +83,8 @@ export const DialogProvider: React.FC<React.PropsWithChildren> = ({
     >({ targetDatabaseType: DatabaseType.GENERIC });
     const openExportSQLDialogHandler: DialogContext['openExportSQLDialog'] =
         useCallback(
-            ({ targetDatabaseType }) => {
-                setExportSQLDialogParams({ targetDatabaseType });
+            ({ targetDatabaseType, exportFormat }) => {
+                setExportSQLDialogParams({ targetDatabaseType, exportFormat });
                 setOpenExportSQLDialog(true);
             },
             [setOpenExportSQLDialog]

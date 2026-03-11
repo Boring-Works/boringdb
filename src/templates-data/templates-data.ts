@@ -49,6 +49,12 @@ import { laravelActivitylogDb } from './templates/laravel-activitylog-db';
 import { pixelfedDb } from './templates/pixelfed-db';
 import { polrDb } from './templates/polr-db';
 import { djangoAxesDb } from './templates/django-axes-db';
+import { ragPipelineDb } from './templates/rag-pipeline-db';
+import { aiGatewayDb } from './templates/ai-gateway-db';
+import { promptManagementDb } from './templates/prompt-management-db';
+import { evalsPlatformDb } from './templates/evals-platform-db';
+import { multiAgentDb } from './templates/multi-agent-db';
+import { mcpRegistryDb } from './templates/mcp-registry-db';
 export interface Template {
     slug: string;
     name: string;
@@ -113,4 +119,10 @@ export const templates: Template[] = [
     pixelfedDb,
     polrDb,
     djangoAxesDb,
+    ragPipelineDb,
+    aiGatewayDb,
+    promptManagementDb,
+    evalsPlatformDb,
+    multiAgentDb,
+    mcpRegistryDb,
 ];
