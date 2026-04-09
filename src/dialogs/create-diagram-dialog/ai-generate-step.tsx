@@ -56,6 +56,13 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
         }
     }, [monaco]);
 
+    // Abort any in-progress generation when the component unmounts
+    useEffect(() => {
+        return () => {
+            abortControllerRef.current?.abort();
+        };
+    }, []);
+
     const handleGenerate = useCallback(async () => {
         if (!prompt.trim()) return;
 
@@ -95,21 +102,15 @@ export const AIGenerateStep: React.FC<AIGenerateStepProps> = ({
     const handleImport = useCallback(async () => {
         const stripped = stripCodeFences(dbml);
         const format = detectImportMethod(stripped);
-        console.log('[AI Diagram] Detected format:', format);
 
         setIsImporting(true);
         try {
             if (format === 'ddl' && onImportSQL) {
                 // AI generated SQL instead of DBML — route through SQL importer
-                console.log('[AI Diagram] Routing through SQL importer');
                 await onImportSQL(stripped);
             } else {
                 // DBML path (default)
                 const cleaned = fixDBMLSyntax(stripped);
-                console.log(
-                    '[AI Diagram] Cleaned DBML for import:',
-                    cleaned.substring(0, 200)
-                );
                 await onImport(cleaned);
             }
         } catch (error: unknown) {

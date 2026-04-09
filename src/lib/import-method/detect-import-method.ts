@@ -41,17 +41,12 @@ export const detectImportMethod = (content: string): ImportMethod | null => {
     if (hasDDLKeywords) return 'ddl';
 
     // Check if it looks like JSON
-    try {
-        // Just check structure, don't need full parse for detection
-        if (
-            (content.trim().startsWith('{') && content.trim().endsWith('}')) ||
-            (content.trim().startsWith('[') && content.trim().endsWith(']'))
-        ) {
-            return 'query';
-        }
-    } catch (error) {
-        // Not valid JSON, might be partial
-        console.error('Error detecting content type:', error);
+    const trimmed = content.trim();
+    if (
+        (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+        return 'query';
     }
 
     // If we can't confidently detect, return null

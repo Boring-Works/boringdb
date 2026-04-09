@@ -15,8 +15,15 @@ function resolveModel(requestedModel: string | undefined, env: Env): string {
     if (requestedModel && MODEL_MAP[requestedModel]) {
         return MODEL_MAP[requestedModel];
     }
-    // Default to the general-purpose model
-    return `@cf/openai/${env.AI_MODEL}`;
+    // Default to the general-purpose model — look up in MODEL_MAP first so the
+    // env var only needs to hold the short name (e.g. "gpt-oss-120b"), then fall
+    // back to constructing the path directly in case it's a new model not yet in
+    // MODEL_MAP. Guarding against a missing / undefined env var prevents passing
+    // the literal string "@cf/openai/undefined" to Workers AI.
+    if (env.AI_MODEL) {
+        return MODEL_MAP[env.AI_MODEL] ?? `@cf/openai/${env.AI_MODEL}`;
+    }
+    return MODEL_MAP['gpt-oss-120b'];
 }
 
 const ALLOWED_ORIGINS = [
