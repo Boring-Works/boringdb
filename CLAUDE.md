@@ -44,7 +44,7 @@ npm run deploy       # Deploy to Cloudflare (runs wrangler deploy)
 | File | Purpose |
 |------|---------|
 | `worker.ts` | CF Worker — AI proxy + asset serving |
-| `wrangler.toml` | Worker config (name=`chartdb`, can't rename due to route binding) |
+| `wrangler.toml` | Worker config (name=`chartdb`, custom domain binding) |
 | `public/config.js` | Runtime env vars (API endpoint, model, analytics toggle) |
 | `src/dialogs/create-diagram-dialog/` | AI generate + import pipeline |
 | `src/lib/data/sql-import/` | SQL DDL importers per dialect |
@@ -58,21 +58,30 @@ npm run deploy       # Deploy to Cloudflare (runs wrangler deploy)
 ## Deployment
 - **GitHub:** github.com/Boring-Works/boringdb (public)
 - **Worker name:** `chartdb` (cosmetic only, can't rename due to existing config)
-- **Domain:** Custom Domain `db.getboring.io` (configured in CF dashboard, NOT wrangler.toml)
-- **Routing:** Custom Domain only — NO routes in wrangler.toml (routes cause 10020 conflicts)
-- **CI/CD:** Cloudflare Workers Builds (dashboard-configured, auto-deploys on push to main)
+- **Domain:** `db.getboring.io`
+- **Local deploy:** `npm run build && npm run deploy`
+
+### Routing Architecture
+Two layers work together to route `db.getboring.io` to `chartdb`:
+
+1. **Custom domain in wrangler.toml** (`[[routes]] pattern = "db.getboring.io" custom_domain = true`) — wrangler manages the CF custom domain binding on every deploy.
+
+2. **Zone route via CF API** (`db.getboring.io/*` → `chartdb`) — manually created via CF API. This beats the `boringbuilder` wildcard route (`*getboring.io/*`) that would otherwise intercept the request and try to dispatch to a worker named `db` (which doesn't exist).
+
+The zone route is why the site works. Without it, `boringbuilder` catches all `*.getboring.io` requests first.
+
+### CI/CD
+- **Cloudflare Workers Builds** (dashboard-configured) auto-deploys on push to main
   - Build command: `npm run build`
   - Deploy command: `npm run deploy`
   - Build cache: Enabled
-- **Local branch:** `boring/cloudflare-workers` pushes to remote `main`
-- **Local deploy:** `npm run build && npm run deploy`
+- **.nvmrc** controls Node version (v24 — required for `@types/node@^24`)
 
-### Workers Builds Gotchas
-- `.nvmrc` controls Node version (currently v24, Workers Builds respects it)
-- `wrangler` is pinned as a devDependency — do NOT rely on npx downloading it
-- Do NOT add `routes` to wrangler.toml — Custom Domain handles routing, routes cause deploy conflicts
-- Build needs `NODE_OPTIONS='--max-old-space-size=4096'` — Monaco Editor causes OOM at 2GB default
-- `wrangler deploy` will say "No deploy targets" — this is normal, Custom Domain handles it
+### Build Gotchas
+- `NODE_OPTIONS='--max-old-space-size=4096'` required — Monaco Editor OOMs the 2GB default
+- `npm run lint` is NOT part of `npm run build` — lint runs separately in CI only
+- `wrangler deploy` will say "No deploy targets" — this is normal; Custom Domain handles it
+- wrangler is pinned as a devDependency — do NOT rely on npx downloading it
 
 ## Branding
 - Logo source: `/Users/codyboring/Downloads/BoringDB-logo.jpeg` (2048x2048)
@@ -95,7 +104,7 @@ These are internal code identifiers that would break things if renamed:
 - `useChartDB` hook, `ChartDBProvider`, `chartdb-context/` — core state management
 - `HIDE_CHARTDB_CLOUD` env var — controls cloud feature visibility
 - `Dexie('ChartDB')` — IndexedDB database name (user data!)
-- `wrangler.toml name = "chartdb"` — worker identity, Custom Domain bound to it
+- `wrangler.toml name = "chartdb"` — worker identity
 
 ## Decisions
 | Decision | Reason |
@@ -107,8 +116,9 @@ These are internal code identifiers that would break things if renamed:
 | DBML + SQL dual import | Models output SQL despite DBML prompt |
 | Stream normalization in worker | Workers AI legacy format breaks AI SDK |
 | `run_worker_first = true` | Needed for HTML cache-busting headers |
-| Custom Domain over Routes | Routes cause 10020 conflicts; Custom Domain is faster + cleaner |
+| Custom domain + zone route | boringbuilder wildcard `*getboring.io/*` intercepts without specific zone route |
 | `NODE_OPTIONS` 4GB heap | Monaco Editor OOMs the 2GB default in CI |
 | wrangler as devDependency | Prevents CI from downloading fresh copy every build |
 | `manualChunks` for monaco/react-flow | Reduces peak memory during Vite bundling |
 | `localStorage` try/catch in utils.ts | `getWorkspaceId()` must work in Node test environments |
+| Lint excluded from build script | Any lint warning killed CF Workers Builds silently |
