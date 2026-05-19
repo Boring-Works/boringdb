@@ -39,6 +39,7 @@ Summary of modifications (2025–2026):
 - Removed third-party analytics (Fathom)
 - Removed external social links and GitHub star prompts
 - PNG logo and branding replacement
+- Added welcome card on empty canvas (AI generate, import, scratch-start CTAs)
 
 Source code: https://github.com/Boring-Works/boringdb
 Upstream: https://github.com/chartdb/chartdb

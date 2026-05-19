@@ -53,6 +53,7 @@ npm run deploy       # Deploy to Cloudflare (runs wrangler deploy)
 | `src/context/chartdb-context/` | Core app state (internal name, don't rename) |
 | `src/context/storage-context/` | Dexie IndexedDB persistence |
 | `src/i18n/locales/` | 22 locale files |
+| `src/pages/editor-page/canvas/canvas.tsx` | Main canvas — welcome card renders here when `tables.length === 0` |
 | `NOTICE` | AGPL-3.0 compliance — modifications from upstream |
 
 ## Deployment
@@ -122,3 +123,4 @@ These are internal code identifiers that would break things if renamed:
 | `manualChunks` for monaco/react-flow | Reduces peak memory during Vite bundling |
 | `localStorage` try/catch in utils.ts | `getWorkspaceId()` must work in Node test environments |
 | Lint excluded from build script | Any lint warning killed CF Workers Builds silently |
+| Welcome card on empty canvas | Reduces cold-start friction; card disappears once tables exist |

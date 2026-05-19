@@ -35,6 +35,7 @@ Everything runs as a **single Cloudflare Worker**: the static app, the AI proxy,
 ## Features
 
 - **AI schema generation** — describe a schema in plain English and get a visual diagram back, powered by Cloudflare Workers AI. No OpenAI key. No external API calls.
+- **Guided onboarding** — a welcome card greets every new diagram with three clear starting points: generate with AI, import SQL/DBML, or start from scratch.
 - **Visual editor** — drag tables, draw relationships, edit columns and types inline with full keyboard support.
 - **Multi-dialect SQL export** — generates production-ready DDL for PostgreSQL, MySQL, SQLite, SQL Server, and MariaDB.
 - **Import anything** — paste raw SQL DDL or DBML and the diagram builds automatically. Format is detected automatically.
@@ -116,6 +117,7 @@ Then add a Custom Domain in the Cloudflare dashboard pointing to your `chartdb` 
 | Node/Express server | Edge-native, deploys globally in seconds |
 | OpenAI stream format | Legacy Workers AI stream normalized at the edge |
 | DBML output only | DBML and SQL DDL detected and parsed automatically |
+| Blank canvas on new diagram | Welcome card with AI, import, and scratch-start CTAs |
 
 ---
 
