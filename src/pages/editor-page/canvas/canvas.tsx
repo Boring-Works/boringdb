@@ -51,10 +51,16 @@ import {
     AlertTriangle,
     Highlighter,
     EyeOff,
+    Sparkles,
+    Upload,
+    Plus,
 } from 'lucide-react';
+import LogoLight from '@/assets/logo-light.png';
+import LogoDark from '@/assets/logo-dark.png';
 import { Button } from '@/components/button/button';
 import { useLayout } from '@/hooks/use-layout';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
+import { useDialog } from '@/hooks/use-dialog';
 import { Badge } from '@/components/badge/badge';
 import { useTheme } from '@/hooks/use-theme';
 import { useTranslation } from 'react-i18next';
@@ -299,9 +305,11 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
         updateNote,
         highlightedCustomType,
         highlightCustomTypeId,
+        createTable,
     } = useChartDB();
     const { showSidePanel } = useLayout();
     const { effectiveTheme } = useTheme();
+    const { openCreateDiagramDialog, openImportDiagramDialog } = useDialog();
     const { scrollAction, showDBViews, showMiniMapOnCanvas } = useLocalConfig();
     const { isMd: isDesktop } = useBreakpoint('md');
     const [highlightOverlappingTables, setHighlightOverlappingTables] =
@@ -1829,6 +1837,58 @@ export const Canvas: React.FC<CanvasProps> = ({ initialTables }) => {
                         gap={16}
                         size={1}
                     />
+                    {/* Welcome card — shown when diagram is empty */}
+                    {tables.length === 0 && !isInitialLoadingNodes && (
+                        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+                            <div className="pointer-events-auto mx-4 flex w-full max-w-sm flex-col items-center gap-6 rounded-2xl border bg-background/95 px-8 py-10 shadow-xl backdrop-blur-sm">
+                                <img
+                                    src={
+                                        effectiveTheme === 'light'
+                                            ? LogoLight
+                                            : LogoDark
+                                    }
+                                    alt="BoringDB"
+                                    className="h-10 w-auto"
+                                />
+                                <div className="flex flex-col items-center gap-2 text-center">
+                                    <h2 className="text-lg font-semibold tracking-tight">
+                                        Design your database schema
+                                    </h2>
+                                    <p className="text-sm text-muted-foreground">
+                                        AI-powered, free, and open source. No
+                                        account or API key required.
+                                    </p>
+                                </div>
+                                <div className="flex w-full flex-col gap-2">
+                                    <Button
+                                        className="w-full justify-start gap-2"
+                                        onClick={openCreateDiagramDialog}
+                                    >
+                                        <Sparkles className="size-4" />
+                                        Generate with AI
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start gap-2"
+                                        onClick={() =>
+                                            openImportDiagramDialog({})
+                                        }
+                                    >
+                                        <Upload className="size-4" />
+                                        Import SQL / DBML
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start gap-2"
+                                        onClick={() => createTable()}
+                                    >
+                                        <Plus className="size-4" />
+                                        Start from scratch
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {/* Empty state when all tables are hidden by filter */}
                     {allTablesHiddenByFilter && (
                         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
