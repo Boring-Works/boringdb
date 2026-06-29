@@ -4,6 +4,9 @@ compatibility_flags = ["nodejs_compat"]
 main = "./worker.ts"
 workers_dev = false
 
+[observability]
+enabled = true
+
 [[routes]]
 pattern = "db.getboring.io"
 custom_domain = true
