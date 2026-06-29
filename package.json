@@ -116,5 +116,8 @@
         "vite": "^7.2.7",
         "vitest": "4.1.9",
         "wrangler": "^4.72.0"
+    },
+    "overrides": {
+        "dompurify": "^3.4.11"
     }
 }
