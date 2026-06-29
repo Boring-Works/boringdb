@@ -9,8 +9,8 @@ pattern = "db.getboring.io"
 custom_domain = true
 
 [vars]
-AI_MODEL = "gpt-oss-120b"
-AI_DIAGRAM_MODEL = "qwen2.5-coder-32b-instruct"
+AI_MODEL = "nemotron-3-120b"
+AI_DIAGRAM_MODEL = "nemotron-3-120b"
 
 [ai]
 binding = "AI"

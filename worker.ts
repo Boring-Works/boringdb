@@ -7,9 +7,16 @@ interface Env {
 
 // Map client model names to Workers AI model paths
 const MODEL_MAP: Record<string, string> = {
+    'nemotron-3-120b': '@cf/nvidia/nemotron-3-120b-a12b',
     'gpt-oss-120b': '@cf/openai/gpt-oss-120b',
     'qwen2.5-coder-32b-instruct': '@cf/qwen/qwen2.5-coder-32b-instruct',
 };
+
+// NVIDIA Nemotron 3 models require temperature=1.0 and top_p=0.95 for all tasks
+// (reasoning, tool calling, general chat) per NVIDIA's documented guidance.
+function isNemotron(model: string): boolean {
+    return /nemotron/i.test(model);
+}
 
 function resolveModel(requestedModel: string | undefined, env: Env): string {
     if (requestedModel && MODEL_MAP[requestedModel]) {
@@ -208,15 +215,23 @@ export default {
                 const maxTokens =
                     body.max_tokens || body.max_completion_tokens || 16384;
 
-                const aiOptions = {
-                    messages,
-                    max_tokens: maxTokens,
-                    // Workers AI handles temperature natively; AI SDK strips it
-                    // for reasoning models, so default to 0.3 for deterministic SQL output
-                    temperature: body.temperature ?? 0.3,
-                };
-
                 const resolvedModel = resolveModel(body.model, env);
+
+                // Workers AI handles temperature natively; AI SDK strips it for
+                // reasoning models. Nemotron 3 requires temperature=1.0 + top_p=0.95
+                // (NVIDIA guidance); other models default to 0.3 for deterministic SQL.
+                const aiOptions: Record<string, unknown> = isNemotron(resolvedModel)
+                    ? {
+                          messages,
+                          max_tokens: maxTokens,
+                          temperature: body.temperature ?? 1.0,
+                          top_p: 0.95,
+                      }
+                    : {
+                          messages,
+                          max_tokens: maxTokens,
+                          temperature: body.temperature ?? 0.3,
+                      };
 
                 if (body.stream) {
                     const aiStream = await env.AI.run(resolvedModel, {

@@ -217,8 +217,7 @@ export async function generateDiagramFromPrompt({
     const apiKey = window?.env?.OPENAI_API_KEY ?? OPENAI_API_KEY ?? 'proxy';
     const baseUrl =
         window?.env?.OPENAI_API_ENDPOINT ?? OPENAI_API_ENDPOINT ?? '/api/v1';
-    const modelName =
-        window?.env?.AI_DIAGRAM_MODEL ?? 'qwen2.5-coder-32b-instruct';
+    const modelName = window?.env?.AI_DIAGRAM_MODEL ?? 'nemotron-3-120b';
 
     const openai = createOpenAI({
         apiKey,

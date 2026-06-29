@@ -37,8 +37,8 @@ npm run deploy       # Deploy to Cloudflare (runs wrangler deploy)
 - Key file: `src/dialogs/create-diagram-dialog/ai-generate-step.tsx`
 
 ### Models (wrangler.toml vars)
-- `AI_MODEL`: gpt-oss-120b (general purpose)
-- `AI_DIAGRAM_MODEL`: qwen2.5-coder-32b-instruct (code/schema gen)
+- `AI_MODEL`: nemotron-3-120b (NVIDIA Nemotron 3, native DBML output)
+- `AI_DIAGRAM_MODEL`: nemotron-3-120b (NVIDIA Nemotron 3, temp=1.0 top_p=0.95)
 
 ## Key Files
 | File | Purpose |
